@@ -1,11 +1,11 @@
 
-mod memoryBus;
+mod memory_bus;
 mod cpu;
 
 pub struct CPU {
     register: cpu::Registers,
     pc: u16,
-    bus: memoryBus::MemoryBus
+    bus: memory_bus::MemoryBus
 }
 
 
