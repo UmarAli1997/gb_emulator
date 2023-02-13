@@ -5,6 +5,34 @@ const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;
 const CARRY_FLAG_BYTE_POSITION: u8 = 4;
 
+// Building CPU up
+pub struct CPU {
+    register: Registers,
+    pc: u16,
+    sp: u16,
+}
+
+// Initialising CPU with zero values
+impl CPU {
+    pub fn new() -> CPU {
+        let mut cpu = CPU {
+            register:Registers {
+                a: 0,
+                b: 0,
+                c: 0,
+                d: 0,
+                f: 0,
+                e: 0,
+                h: 0,
+                l: 0,
+            },
+            pc : 0,
+            sp : 0,
+        };
+        cpu
+    }
+}
+
 struct FlagsRegister {
     // Zero flag
     z: bool,
@@ -16,7 +44,7 @@ struct FlagsRegister {
     c: bool
 }
 
-pub struct Registers {
+struct Registers {
     a: u8,
     b: u8,
     c: u8,
