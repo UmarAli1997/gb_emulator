@@ -19,7 +19,7 @@ fn main() {
 
     for val in boot_rom.iter() {
         //println!("{:#X}", val)
-        memory.copy_rom(0, &boot_rom);
+        memory.copy_to_ram(0, &boot_rom);
     }
 
 //     for i in 0..0x0102 {
