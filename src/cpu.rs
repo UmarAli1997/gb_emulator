@@ -1,4 +1,5 @@
 use std::convert::From;
+use crate::memory_bus::MemoryBus;
 
 const ZERO_FLAG_BYTE_POSITION: u8 = 7;
 const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
@@ -30,6 +31,14 @@ impl CPU {
             sp : 0,
         };
         cpu
+    }
+
+    pub fn read_instruction(&self, memory: MemoryBus, address: u16) {
+        memory.read_byte(address);
+    }
+
+    pub fn write_instruction(&mut self, memory: MemoryBus, address: u16, data: u8) {
+        memory.write_byte(address, data)
     }
 }
 
@@ -66,41 +75,41 @@ impl From<FlagsRegister> for u8  {
 }
 
 impl Registers {
-    fn read_af(&self) -> u16 {
+    pub fn read_af(&self) -> u16 {
         // Left shift register a by 8 bits and do a bitwise OR operation with register f
         return (self.a as u16) << 8 | self.f as u16;
     }
 
-    fn set_af(&mut self, value: u16) {
+    pub fn set_af(&mut self, value: u16) {
         // Bitwise AND the MSB then right shift the result into the LSB to store into the register
         self.a = ((value & 0xFF00) >> 8) as u8;
         // No need to right shift the result here as the LSB is already in the correct position
         self.f = (value & 0xFF) as u8;
     }
 
-    fn read_bc(&self) -> u16 {
+    pub fn read_bc(&self) -> u16 {
         return (self.b as u16) << 8 | self.c as u16;
     }
 
-    fn set_bc(&mut self, value: u16) {
+    pub fn set_bc(&mut self, value: u16) {
         self.b = ((value & 0xFF00) >> 8) as u8;
         self.c = (value & 0xFF) as u8;
     }
 
-    fn read_de(&self) -> u16 {
+    pub fn read_de(&self) -> u16 {
         return (self.d as u16) << 8 | self.e as u16;
     }
 
-    fn set_de(&mut self, value: u16) {
+    pub fn set_de(&mut self, value: u16) {
         self.d = ((value & 0xFF00) >> 8) as u8;
         self.e = (value & 0xFF) as u8;
     }
 
-    fn read_hl(&self) -> u16 {
+    pub fn read_hl(&self) -> u16 {
         return (self.d as u16) << 8 | self.e as u16;
     }
 
-    fn set_hl(&mut self, value: u16) {
+    pub fn set_hl(&mut self, value: u16) {
         self.d = ((value & 0xFF00) >> 8) as u8;
         self.e = (value & 0xFF) as u8;
     }
