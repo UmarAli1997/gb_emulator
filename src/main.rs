@@ -1,13 +1,13 @@
 use std::path::Path;
 use std::fs;
 
-use crate::cpu::CPU;
-use crate::memory_bus::MemoryBus;
+use cpu::{CPU, Registers, RegisterU8};
+use instructions::Instruction;
+use mmu::MemoryBus;
 
-
-mod memory_bus;
+mod mmu;
 mod cpu;
-
+mod instructions;
 
 fn main() {
 
@@ -17,12 +17,18 @@ fn main() {
     let boot_path = Path::new("./BOOT/dmg_boot.bin");
     let boot_rom = fs::read(boot_path).expect("File not found!");
 
-    for val in boot_rom.iter() {
-        //println!("{:#X}", val)
-        memory.copy_to_ram(0, &boot_rom);
-    }
+    memory.copy_to_ram(0, &boot_rom);
 
-//     for i in 0..0x0102 {
-//         println!("{:#X}", memory.read_byte(i));
-//     }
+    // for val in boot_rom.iter() {
+    //     //println!("{:#X}", val)
+    //     memory.copy_to_ram(0, &boot_rom);
+    // }
+
+    // Checking if the data has been loaded in correctly
+    // for i in 0..0x0100 {
+    //     println!("{:#X}", memory.read_byte(i));
+    // }
+
+    cpu.execute();
+
 }
