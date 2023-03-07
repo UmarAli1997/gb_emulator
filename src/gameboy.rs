@@ -48,7 +48,7 @@ impl Gameboy {
             0x4E => todo!(),
             0x4F => self.ld_r_r(RegisterU8::C, RegisterU8::A),
 
-            //0x5 opcodes
+            // 0x5 opcodes
             0x50 => self.ld_r_r(RegisterU8::D, RegisterU8::B),
             0x51 => self.ld_r_r(RegisterU8::D, RegisterU8::C),
             0x52 => self.ld_r_r(RegisterU8::D, RegisterU8::D),
@@ -65,7 +65,25 @@ impl Gameboy {
             0x5D => self.ld_r_r(RegisterU8::E, RegisterU8::L),
             0x5E => todo!(),
             0x5F => self.ld_r_r(RegisterU8::E, RegisterU8::A),
-            _ => panic!("Opcode not implemented"),
+
+            // 0x6 opcodes
+            0x60 => self.ld_r_r(RegisterU8::H, RegisterU8::B),
+            0x61 => self.ld_r_r(RegisterU8::H, RegisterU8::C),
+            0x62 => self.ld_r_r(RegisterU8::H, RegisterU8::D),
+            0x63 => self.ld_r_r(RegisterU8::H, RegisterU8::E),
+            0x64 => self.ld_r_r(RegisterU8::H, RegisterU8::H),
+            0x65 => self.ld_r_r(RegisterU8::H, RegisterU8::L),
+            0x66 => todo!(),
+            0x67 => self.ld_r_r(RegisterU8::H, RegisterU8::A),
+            0x68 => self.ld_r_r(RegisterU8::L, RegisterU8::B),
+            0x69 => self.ld_r_r(RegisterU8::L, RegisterU8::C),
+            0x6A => self.ld_r_r(RegisterU8::L, RegisterU8::D),
+            0x6B => self.ld_r_r(RegisterU8::L, RegisterU8::E),
+            0x6C => self.ld_r_r(RegisterU8::L, RegisterU8::H),
+            0x6D => self.ld_r_r(RegisterU8::L, RegisterU8::L),
+            0x6E => todo!(),
+            0x6F => self.ld_r_r(RegisterU8::L, RegisterU8::A),
+            _ => panic!("Opcode not implemented: {:#X}", opcode),
         }
     }
 
