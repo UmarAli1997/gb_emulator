@@ -11,8 +11,6 @@ use instructions::Instruction;
 use mmu::MemoryBus;
 use crate::gameboy::Gameboy;
 
-
-
 fn main() {
 
     let mut gameboy = Gameboy {
