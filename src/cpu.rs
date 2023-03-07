@@ -1,4 +1,5 @@
 use std::convert::From;
+use crate::Gameboy;
 use crate::mmu::MemoryBus;
 use crate::instructions::Instruction;
 
@@ -9,9 +10,9 @@ const CARRY_FLAG_BYTE_POSITION: u8 = 4;
 
 // Building CPU up
 pub struct CPU {
-    register: Registers,
-    pc: u16,
-    sp: u16,
+    pub register: Registers,
+    pub pc: u16,
+    pub sp: u16,
     flags: FlagsRegister
 }
 
@@ -19,7 +20,7 @@ pub struct CPU {
 impl CPU {
     pub fn new() -> CPU {
         let mut cpu = CPU {
-            register:Registers {
+            register: Registers {
                 a: 0,
                 b: 0,
                 c: 0,
@@ -31,30 +32,9 @@ impl CPU {
             },
             pc: 0,
             sp: 0,
-            flags:FlagsRegister { z: false, n: false, h: false, c: false }
+            flags: FlagsRegister { z: false, n: false, h: false, c: false }
         };
         cpu
-    }
-
-    pub fn read_instruction(&self, memory: MemoryBus, address: u16) {
-        memory.read_byte(address);
-    }
-
-    pub fn write_instruction(&self, mut memory: MemoryBus, address: u16, data: u8) {
-        memory.write_byte(address, data)
-    }
-
-    pub fn execute (&mut self) {
-        let opcode = main::memory;
-        self.pc += 1;
-        self.decode(opcode);
-    }
-
-    fn decode(&mut self, opcode: u16) {
-        match opcode {
-            0x00 => ,
-            _ => println!("Fail")
-        }
     }
 
 }
