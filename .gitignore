@@ -3,4 +3,5 @@
 /roms
 /BOOT
 other_stuff.rs
-instructions.rs
+/src/instructions.rs
+.vscode
