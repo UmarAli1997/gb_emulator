@@ -3,20 +3,13 @@ use std::fs;
 
 mod mmu;
 mod cpu;
-mod instructions;
 mod gameboy;
 
-use cpu::{CPU, Registers, RegisterU8};
-use instructions::Instruction;
-use mmu::MemoryBus;
-use crate::gameboy::Gameboy;
+use gameboy::Gameboy;
 
 fn main() {
 
-    let mut gameboy = Gameboy {
-        cpu: CPU::new(),
-        memory: MemoryBus::new()
-    };
+    let mut gameboy = Gameboy::new();
 
     let boot_path = Path::new("./BOOT/dmg_boot.bin");
     let boot_rom = fs::read(boot_path).expect("File not found!");
