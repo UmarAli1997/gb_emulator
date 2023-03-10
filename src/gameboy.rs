@@ -10,28 +10,29 @@ pub struct Gameboy {
 impl Gameboy {
 
     pub fn new() -> Gameboy {
-        let mut gameboy = Gameboy {
+        let gameboy = Gameboy {
             cpu: CPU::new(),
             memory: MemoryBus::new()
         }; 
         gameboy
     }
 
-    pub fn read_instruction(&self, memory: &MemoryBus, address: u16) -> u8 {
-        return memory.read_byte(address);
+    pub fn read_instruction(&self, address: u16) -> u8 {
+        return self.memory.read_byte(address);
     }
 
-    pub fn write_instruction(&self, memory: &mut MemoryBus, address: u16, data: u8) {
-        memory.write_byte(address, data)
+    pub fn write_instruction(&mut self, address: u16, data: u8) {
+        self.memory.write_byte(address, data);
     }
 
     pub fn fetch (&mut self) {
-        let opcode = self.read_instruction(&self.memory, self.cpu.pc);
+        let opcode = self.read_instruction(self.cpu.pc);
         self.cpu.pc += 1;
         self.execute(opcode);
     }
 
     fn execute(&mut self, opcode: u8) {
+        // Opcode table: https://izik1.github.io/gbops/index.html
         match opcode {
             // 0x0 opcodes
             0x00 => self.nop(),
@@ -112,7 +113,7 @@ impl Gameboy {
             0x43 => self.ld_r_r(RegisterU8::B, RegisterU8::E),
             0x44 => self.ld_r_r(RegisterU8::B, RegisterU8::H),
             0x45 => self.ld_r_r(RegisterU8::B, RegisterU8::L),
-            0x46 => todo!(),
+            0x46 => self.ld_r_hl(RegisterU8::B),
             0x47 => self.ld_r_r(RegisterU8::B, RegisterU8::A),
             0x48 => self.ld_r_r(RegisterU8::C, RegisterU8::B),
             0x49 => self.ld_r_r(RegisterU8::C, RegisterU8::C),
@@ -120,7 +121,7 @@ impl Gameboy {
             0x4B => self.ld_r_r(RegisterU8::C, RegisterU8::E),
             0x4C => self.ld_r_r(RegisterU8::C, RegisterU8::H),
             0x4D => self.ld_r_r(RegisterU8::C, RegisterU8::L),
-            0x4E => todo!(),
+            0x4E => self.ld_r_hl(RegisterU8::C),
             0x4F => self.ld_r_r(RegisterU8::C, RegisterU8::A),
 
             // 0x5 opcodes
@@ -130,7 +131,7 @@ impl Gameboy {
             0x53 => self.ld_r_r(RegisterU8::D, RegisterU8::E),
             0x54 => self.ld_r_r(RegisterU8::D, RegisterU8::H),
             0x55 => self.ld_r_r(RegisterU8::D, RegisterU8::L),
-            0x56 => todo!(),
+            0x56 => self.ld_r_hl(RegisterU8::D),
             0x57 => self.ld_r_r(RegisterU8::D, RegisterU8::A),
             0x58 => self.ld_r_r(RegisterU8::E, RegisterU8::B),
             0x59 => self.ld_r_r(RegisterU8::E, RegisterU8::C),
@@ -138,7 +139,7 @@ impl Gameboy {
             0x5B => self.ld_r_r(RegisterU8::E, RegisterU8::E),
             0x5C => self.ld_r_r(RegisterU8::E, RegisterU8::H),
             0x5D => self.ld_r_r(RegisterU8::E, RegisterU8::L),
-            0x5E => todo!(),
+            0x5E => self.ld_r_hl(RegisterU8::E),
             0x5F => self.ld_r_r(RegisterU8::E, RegisterU8::A),
 
             // 0x6 opcodes
@@ -148,7 +149,7 @@ impl Gameboy {
             0x63 => self.ld_r_r(RegisterU8::H, RegisterU8::E),
             0x64 => self.ld_r_r(RegisterU8::H, RegisterU8::H),
             0x65 => self.ld_r_r(RegisterU8::H, RegisterU8::L),
-            0x66 => todo!(),
+            0x66 => self.ld_r_hl(RegisterU8::H),
             0x67 => self.ld_r_r(RegisterU8::H, RegisterU8::A),
             0x68 => self.ld_r_r(RegisterU8::L, RegisterU8::B),
             0x69 => self.ld_r_r(RegisterU8::L, RegisterU8::C),
@@ -156,30 +157,33 @@ impl Gameboy {
             0x6B => self.ld_r_r(RegisterU8::L, RegisterU8::E),
             0x6C => self.ld_r_r(RegisterU8::L, RegisterU8::H),
             0x6D => self.ld_r_r(RegisterU8::L, RegisterU8::L),
-            0x6E => todo!(),
+            0x6E => self.ld_r_hl(RegisterU8::L),
             0x6F => self.ld_r_r(RegisterU8::L, RegisterU8::A),
 
             //0x7 opcodes
-            0x70 => todo!(),
-            0x71 => todo!(),
-            0x72 => todo!(),
-            0x73 => todo!(),
-            0x74 => todo!(),
-            0x75 => todo!(),
+            0x70 => self.ld_hl_r(RegisterU8::B),
+            0x71 => self.ld_hl_r(RegisterU8::C),
+            0x72 => self.ld_hl_r(RegisterU8::D),
+            0x73 => self.ld_hl_r(RegisterU8::E),
+            0x74 => self.ld_hl_r(RegisterU8::H),
+            0x75 => self.ld_hl_r(RegisterU8::L),
             0x76 => todo!(),
-            0x77 => todo!(),
+            0x77 => self.ld_hl_r(RegisterU8::A),
             0x78 => self.ld_r_r(RegisterU8::A, RegisterU8::B),
             0x79 => self.ld_r_r(RegisterU8::A, RegisterU8::C),
             0x7A => self.ld_r_r(RegisterU8::A, RegisterU8::D),
             0x7B => self.ld_r_r(RegisterU8::A, RegisterU8::E),
             0x7C => self.ld_r_r(RegisterU8::A, RegisterU8::H),
             0x7D => self.ld_r_r(RegisterU8::A, RegisterU8::L),
-            0x7E => todo!(),
+            0x7E => self.ld_r_hl(RegisterU8::A),
             0x7F => self.ld_r_r(RegisterU8::A, RegisterU8::A),
             _ => panic!("Opcode not implemented: {:#X}", opcode),
         }
     }
 
+
+    // CPU instructions
+    // Instructions intepreted from https://gekkio.fi/files/gb-docs/gbctr.pdf
     fn nop(&self) { }
 
     fn ld_r_r(&mut self, r1: RegisterU8, r2: RegisterU8) {
@@ -190,15 +194,21 @@ impl Gameboy {
     }
 
     fn ld_r_n(&mut self, r1: RegisterU8) {
-        let n = self.read_instruction(&self.memory, self.cpu.pc);
+        let n = self.read_instruction(self.cpu.pc);
         self.cpu.pc += 1;
         self.cpu.register.write_u8(r1, n)
     }
 
     fn ld_r_hl(&mut self, r1: RegisterU8) {
         let address = self.cpu.register.read_u16(RegisterU16::HL);
-        let data = self.read_instruction(&self.memory, address);
+        let data = self.read_instruction(address);
         self.cpu.register.write_u8(r1, data);
+    }
+
+    fn ld_hl_r(&mut self, r1: RegisterU8) {
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.cpu.register.read_u8(r1);
+        self.write_instruction(address, data);
     }
 
     // fn execute(&mut self, instruction: &Instruction) {
@@ -262,13 +272,30 @@ mod tests {
         // Set up gameboy state for test
         gameboy.cpu.register.write_u8(RegisterU8::H, 0x11);
         gameboy.cpu.register.write_u8(RegisterU8::L, 0x11);
-        gameboy.memory.write_byte(0x1111, 0x01);
+        gameboy.write_instruction(gameboy.cpu.register.read_u16(RegisterU16::HL), 0x01);
 
         // Run test and compare output with expected output
         gameboy.ld_r_hl(r1);
         let new_r1 = gameboy.cpu.register.read_u8(r1);
 
         assert_eq!(new_r1, 0x01);
+    }
+
+    #[test]
+    fn test_ld_hl_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::H, 0x11);
+        gameboy.cpu.register.write_u8(RegisterU8::L, 0x11);
+        gameboy.cpu.register.write_u8(r1, 0x01);
+
+        // Run test and compare output
+        gameboy.ld_hl_r(r1);
+        let data_in_memory = gameboy.read_instruction(gameboy.cpu.register.read_u16(RegisterU16::HL));
+        assert_eq!(data_in_memory, 0x01);
     }
 
 }
