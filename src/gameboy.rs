@@ -211,13 +211,6 @@ impl Gameboy {
         self.write_instruction(address, data);
     }
 
-    // fn execute(&mut self, instruction: &Instruction) {
-    //     match instruction {
-    //         Instruction::LD_r_r => instructions::LD_r_r(),
-    //         _ => panic!("Instruction not implemented"),
-    //     }
-    // }
-
 }
 
 #[cfg(test)]
