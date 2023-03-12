@@ -79,6 +79,14 @@ pub enum RegisterU16 {
     SP
 }
 
+#[derive(Copy, Clone)]
+pub enum FlagConds {
+    NZ,
+    Z,
+    NC,
+    C
+}
+
 // If the register needs to be accessed as a u8 this will convert the bool in the struct to a u8
 impl From<FlagsRegister> for u8  {
     fn from(flag: FlagsRegister) -> u8 {
@@ -90,7 +98,6 @@ impl From<FlagsRegister> for u8  {
 }
 
 impl Registers {
-
     pub fn read_u8(&self, reg: RegisterU8) -> u8 {
         match reg {
             RegisterU8::A => self.a,
