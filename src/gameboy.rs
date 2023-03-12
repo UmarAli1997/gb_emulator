@@ -26,8 +26,8 @@ impl Gameboy {
     }
 
     pub fn fetch (&mut self) {
-        let opcode = self.read_instruction(self.cpu.pc);
-        self.cpu.pc += 1;
+        let opcode = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
         self.execute(opcode);
     }
 
@@ -36,7 +36,7 @@ impl Gameboy {
         match opcode {
             // 0x0 opcodes
             0x00 => self.nop(),
-            0x01 => todo!(),
+            0x01 => self.ld_rr_nn(RegisterU16::BC),
             0x02 => todo!(),
             0x03 => todo!(),
             0x04 => todo!(),
@@ -54,7 +54,7 @@ impl Gameboy {
 
             // 0x1 opcodes
             0x10 => todo!(),
-            0x11 => todo!(),
+            0x11 => self.ld_rr_nn(RegisterU16::DE),
             0x12 => todo!(),
             0x13 => todo!(),
             0x14 => todo!(),
@@ -72,7 +72,7 @@ impl Gameboy {
 
             // 0x2 opcodes
             0x20 => todo!(),
-            0x21 => todo!(),
+            0x21 => self.ld_rr_nn(RegisterU16::HL),
             0x22 => todo!(),
             0x23 => todo!(),
             0x24 => todo!(),
@@ -90,7 +90,7 @@ impl Gameboy {
 
             // 0x3 opcodes
             0x30 => todo!(),
-            0x31 => todo!(),
+            0x31 => self.ld_rr_nn(RegisterU16::SP),
             0x32 => todo!(),
             0x33 => todo!(),
             0x34 => todo!(),
@@ -177,6 +177,27 @@ impl Gameboy {
             0x7D => self.ld_r_r(RegisterU8::A, RegisterU8::L),
             0x7E => self.ld_r_hl(RegisterU8::A),
             0x7F => self.ld_r_r(RegisterU8::A, RegisterU8::A),
+
+            //0xA opcodes
+            0xA0 => todo!(),
+            0xA1 => todo!(),
+            0xA2 => todo!(),
+            0xA3 => todo!(),
+            0xA4 => todo!(),
+            0xA5 => todo!(),
+            0xA6 => todo!(),
+            0xA7 => todo!(),
+            0xA8 => self.xor(RegisterU8::B),
+            0xA9 => self.xor(RegisterU8::C),
+            0xAA => self.xor(RegisterU8::D),
+            0xAB => self.xor(RegisterU8::E),
+            0xAC => self.xor(RegisterU8::H),
+            0xAD => self.xor(RegisterU8::L),
+            0xAE => self.xor_hl(),
+            0xAF => self.xor(RegisterU8::A),
+
+
+
             _ => panic!("Opcode not implemented: {:#X}", opcode),
         }
     }
@@ -194,8 +215,8 @@ impl Gameboy {
     }
 
     fn ld_r_n(&mut self, r1: RegisterU8) {
-        let n = self.read_instruction(self.cpu.pc);
-        self.cpu.pc += 1;
+        let n = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
         self.cpu.register.write_u8(r1, n)
     }
 
@@ -211,6 +232,47 @@ impl Gameboy {
         self.write_instruction(address, data);
     }
 
+
+    // 16 bit load instructions
+    fn ld_rr_nn(&mut self, r1: RegisterU16) {
+        let lsb = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let msb = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let nn = (msb as u16) << 8 | lsb as u16;
+        self.cpu.register.write_u16(r1, nn);
+    }
+
+    // ALU Instructions
+    fn xor(&mut self, r1: RegisterU8) {
+        let reg_data = self.cpu.register.read_u8(r1);
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+
+        let result = reg_a ^ reg_data;
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.z = true;
+        }
+    }
+
+    fn xor_hl(&mut self) {
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+
+        let result = reg_a ^ data;
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.z = true;
+        }
+
+    }
+
+
 }
 
 #[cfg(test)]
@@ -225,7 +287,7 @@ mod tests {
         let r2 = RegisterU8::B;
 
         // Set the source register to a value
-        gameboy.cpu.register.b = 1;
+        gameboy.cpu.register.write_u8(r2, 1);
 
         // Run the load from r2 to r1 function
         gameboy.ld_r_r(r1, r2);
@@ -243,7 +305,7 @@ mod tests {
         let r1 = RegisterU8::A;
 
         // Set pc and memory addresses
-        gameboy.cpu.pc = 1;
+        gameboy.cpu.register.pc = 1;
         gameboy.memory.write_byte(0, 0x01);
         gameboy.memory.write_byte(1, 0x02);
 
@@ -291,4 +353,67 @@ mod tests {
         assert_eq!(data_in_memory, 0x01);
     }
 
+    #[test]
+    fn test_ld_rr_nn() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU16::AF;
+        let sp = RegisterU16::SP;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u16(RegisterU16::PC, 0);
+        gameboy.memory.write_byte(0, 0x01);
+        gameboy.memory.write_byte(1, 0x02);
+        gameboy.memory.write_byte(2, 0xFF);
+        gameboy.memory.write_byte(3, 0xFF);
+
+        // Run test and compare output
+        gameboy.ld_rr_nn(r1);
+        gameboy.ld_rr_nn(sp);
+        let msb = gameboy.cpu.register.read_u8(RegisterU8::A);
+        let lsb = gameboy.cpu.register.read_u8(RegisterU8::F);
+        let new_sp = gameboy.cpu.register.read_u16(RegisterU16::SP);
+
+        assert_eq!((msb, lsb), (0x02, 0x01));
+        assert_eq!(new_sp, 0xFFFF);
+    }
+
+    #[test]
+    fn test_xor() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::B;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(r1, 0xFF);
+
+        // Run test and compare output
+        gameboy.xor(r1);
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let flag_check = gameboy.cpu.flags.z;
+
+        assert_eq!(new_r1, 0xFF);
+        assert_eq!(flag_check, false);
+    }
+
+    #[test]
+    fn test_xor_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(r1, 0xFF);
+        gameboy.cpu.register.write_u16(RegisterU16::HL, 0x01);
+        gameboy.write_instruction(0x01, 0xF0);
+
+        // Run test and compare output
+        gameboy.xor_hl();
+
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let flag_check = gameboy.cpu.flags.z;
+
+        assert_eq!(new_r1, 0x0F);
+        assert_eq!(flag_check, false);
+    }
 }
