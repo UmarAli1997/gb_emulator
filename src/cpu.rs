@@ -35,13 +35,13 @@ impl CPU {
 
 pub struct FlagsRegister {
     // Zero flag
-    pub z: bool,
+    z: bool,
     // Add/Subtract flag
-    pub n: bool,
+    n: bool,
     // Half-carry flag
-    pub h: bool,
+    h: bool,
     // Carry flag
-    pub c: bool
+    c: bool
 }
 
 pub struct Registers {
@@ -80,6 +80,14 @@ pub enum RegisterU16 {
 }
 
 #[derive(Copy, Clone)]
+pub enum Flag {
+    Z,
+    N,
+    H,
+    C
+}
+
+#[derive(Copy, Clone)]
 pub enum FlagConds {
     NZ,
     Z,
@@ -97,6 +105,27 @@ impl From<FlagsRegister> for u8  {
     }
 }
 
+impl FlagsRegister {
+    pub fn get_flag(&self, flag: Flag) -> bool {
+        match flag {
+            Flag::Z => self.z,
+            Flag::N => self.n,
+            Flag::H => self.h,
+            Flag::C => self.c
+        }
+    }
+
+    pub fn set_flag(&mut self, flag: Flag, val: bool) {
+        match flag {
+            Flag::Z => self.z = val,
+            Flag::N => self.n = val,
+            Flag::H => self.h = val,
+            Flag::C => self.c = val
+        }
+    }
+
+}
+
 impl Registers {
     pub fn read_u8(&self, reg: RegisterU8) -> u8 {
         match reg {
@@ -108,7 +137,6 @@ impl Registers {
             RegisterU8::F => self.f,
             RegisterU8::H => self.h,
             RegisterU8::L => self.l,
-            _ => panic!("Invalid read_u8")
         }
     }
 
@@ -122,7 +150,6 @@ impl Registers {
             RegisterU8::F => self.f = val, // This needs to be masked to the correct flag
             RegisterU8::H => self.h = val,
             RegisterU8::L => self.l = val,
-            _ => panic!("Invalid write_u8")
         }
     }
 
@@ -134,7 +161,6 @@ impl Registers {
             RegisterU16::HL => (self.h as u16) << 8 | self.l as u16,
             RegisterU16::PC => self.pc,
             RegisterU16::SP => self.sp,
-            _ => panic!("Invalid read_u16")
         }
     }
 
@@ -166,7 +192,6 @@ impl Registers {
 
             RegisterU16::PC => self.pc = val,
             RegisterU16::SP => self.sp = val,
-            _ => panic!("Invalid read_u16")
         }
 
         fn u16_to_u8(val: u16) -> [u8; 2] {
