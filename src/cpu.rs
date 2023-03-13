@@ -14,7 +14,7 @@ pub struct CPU {
 // Initialising CPU with zero values
 impl CPU {
     pub fn new() -> CPU {
-        let mut cpu = CPU {
+        let cpu = CPU {
             register: Registers {
                 a: 0,
                 b: 0,
