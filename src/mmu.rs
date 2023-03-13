@@ -1,5 +1,5 @@
 pub struct MemoryBus {
-    ram: [u8; 0x10000 as usize],
+    pub ram: [u8; 0x10000 as usize],
     //ram: [u8; 0xFFFF as usize],
 }
 
