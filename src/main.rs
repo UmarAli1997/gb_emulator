@@ -21,9 +21,9 @@ fn main() {
     //     memory.copy_to_ram(0, &boot_rom);
     // }
 
-    // Checking if the data has been loaded in correctly
-    // for i in 0..0x0100 {
-    //     println!("{:#X}", gameboy.memory.read_byte(i));
+    // //Checking if the data has been loaded in correctly
+    // for (i, item) in gameboy.memory.ram.iter().enumerate() {
+    //     println!("{:#X}, {}", i, item);
     // }
 
     gameboy.fetch();
