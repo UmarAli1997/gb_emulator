@@ -23,7 +23,7 @@ fn main() {
 
     // //Checking if the data has been loaded in correctly
     // for (i, item) in gameboy.memory.ram.iter().enumerate() {
-    //     println!("{:#X}, {}", i, item);
+    //     println!("{:#X}: {}", i, item);
     // }
 
     gameboy.fetch();
