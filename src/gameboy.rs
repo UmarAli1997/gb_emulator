@@ -38,7 +38,7 @@ impl Gameboy {
             0x00 => self.nop(),
             0x01 => self.ld_rr_nn(RegisterU16::BC),
             0x02 => todo!(),
-            0x03 => todo!(),
+            0x03 => self.inc_rr(RegisterU16::BC),
             0x04 => self.inc_r(RegisterU8::B),
             0x05 => todo!(),
             0x06 => self.ld_r_n(RegisterU8::B),
@@ -56,7 +56,7 @@ impl Gameboy {
             0x10 => todo!(),
             0x11 => self.ld_rr_nn(RegisterU16::DE),
             0x12 => todo!(),
-            0x13 => todo!(),
+            0x13 => self.inc_rr(RegisterU16::DE),
             0x14 => self.inc_r(RegisterU8::D),
             0x15 => todo!(),
             0x16 => self.ld_r_n(RegisterU8::D),
@@ -74,7 +74,7 @@ impl Gameboy {
             0x20 => self.jr_cc_e(FlagConds::NZ),
             0x21 => self.ld_rr_nn(RegisterU16::HL),
             0x22 => todo!(),
-            0x23 => todo!(),
+            0x23 => self.inc_rr(RegisterU16::HL),
             0x24 => self.inc_r(RegisterU8::H),
             0x25 => todo!(),
             0x26 => self.ld_r_n(RegisterU8::H),
@@ -92,7 +92,7 @@ impl Gameboy {
             0x30 => self.jr_cc_e(FlagConds::NC),
             0x31 => self.ld_rr_nn(RegisterU16::SP),
             0x32 => self.ld_hl_minus_a(),
-            0x33 => todo!(),
+            0x33 => self.inc_rr(RegisterU16::SP),
             0x34 => todo!(),
             0x35 => todo!(),
             0x36 => todo!(),
@@ -228,7 +228,7 @@ impl Gameboy {
             0xCA => todo!(),
             0xCB => self.cb_prefix(),
             0xCC => todo!(),
-            0xCD => todo!(),
+            0xCD => self.call_nn(),
             0xCE => todo!(),
             0xCF => todo!(),
 
@@ -448,13 +448,38 @@ fn cb_prefix(&mut self) {
 
     // ALU Instructions
 
-    fn _half_carry_check(&self, val_1: u8, val_2: u8) -> bool {
+    // 8 bit ALU
+    fn _half_carry_add_u8(&self, val_1: u8, val_2: u8) -> bool {
         ((val_1 & 0xF) + (val_2 & 0xF)) & 0x10 == 0x10
+    }
+
+    // Figure out how this works
+    fn _half_carry_sub_u8(&self, value_a: u8, value_b: u8) -> bool {
+        (value_a & 0xF) < (value_b & 0xF)
+    }
+
+    fn cp_n(&mut self) {
+        let data = self.read_instruction(self.cpu.register.pc);
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let result = reg_a - data;
+        self.cpu.register.pc += 1;
+        let half_carry_flag = self._half_carry_sub_u8(reg_a, data);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, true);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        // set the full carry flag on overflow
     }
 
     fn inc_r(&mut self, r1: RegisterU8) {
         let mut reg_data = self.cpu.register.read_u8(r1);
-        let half_carry_flag = self._half_carry_check(reg_data, 1);
+        let half_carry_flag = self._half_carry_add_u8(reg_data, 1);
 
         reg_data += 1;
         self.cpu.register.write_u8(r1, reg_data);
@@ -501,6 +526,13 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, false);
         self.cpu.flags.set_flag(Flag::C, false);
+    }
+
+    // 16 bit ALU
+    fn inc_rr(&mut self, r1: RegisterU16) {
+        let mut reg_data = self.cpu.register.read_u16(r1);
+        reg_data += 1;
+        self.cpu.register.write_u16(r1, reg_data);
     }
 
     // Control flow instructions
@@ -810,6 +842,62 @@ mod tests {
         assert_eq!(flag_check, false);
     }
 
+    // 16 bit ALU test
+    #[test]
+    fn test_inc_rr() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU16::DE;
+
+        // Run test and compare output
+        gameboy.inc_rr(r1);
+        let reg_data = gameboy.cpu.register.read_u16(r1);
+
+        assert_eq!(reg_data, 1);
+    }
+
+
+    // Control flow tests
+    #[test]
+    fn test_jr_cc_e() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.pc = 0x0B;
+        gameboy.write_instruction(0x0B, 0xFB);
+        gameboy.cpu.flags.set_flag(Flag::C, false);
+        gameboy.jr_cc_e(FlagConds::NC);
+
+
+        let new_pc = gameboy.cpu.register.pc;
+        assert_eq!(new_pc, 0x07);
+    }
+
+    #[test]
+    fn test_call_nn() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0x01);
+        gameboy.write_instruction(0x01, 0x02);
+        gameboy.cpu.register.sp = 0xFFFE;
+
+        // Run test and compare output
+        gameboy.call_nn();
+
+        let new_sp = gameboy.cpu.register.sp;
+        let new_pc = gameboy.cpu.register.pc;
+        let msb = gameboy.read_instruction(0xFFFE - 1);
+        let lsb = gameboy.read_instruction(0xFFFE - 2);
+
+        assert_eq!(new_sp, 0xFFFC);
+        assert_eq!(new_pc, 0x0201);
+        assert_eq!(msb, 0x02);
+        assert_eq!(lsb, 0x01);
+    }
+
     #[test]
     fn test_bit_r() {
         // Create a gameboy for testing purposes
@@ -825,28 +913,6 @@ mod tests {
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::Z), true);
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::N), false);
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::H), true);
-    }
-
-    // Control flow tests
-    #[test]
-    fn test_jr_cc_e() {
-        // Create a gameboy for testing purposes
-        let mut gameboy = Gameboy::new();
-
-        gameboy.cpu.register.pc = 0x0B;
-        gameboy.write_instruction(0x0B, 0xFB);
-        gameboy.cpu.flags.set_flag(Flag::C, false);
-
-        gameboy.jr_cc_e(FlagConds::NC);
-
-        let new_pc = gameboy.cpu.register.pc;
-        assert_eq!(new_pc, 0x07);
-    }
-
-    #[test]
-    fn test_call_nn() {
-        // Create a gameboy for testing purposes
-        let mut gameboy = Gameboy::new();
     }
 
 }
