@@ -8,6 +8,7 @@ The main goals of this project are to:
 - Learn to write unit tests
 - Gain an understanding of how computer hardware functions
 - And finally of course, be able to play a game on the emulator :D
+    - Tetris first, then hopefully work towards Pokemon
 
 ## Status
 
