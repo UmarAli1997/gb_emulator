@@ -31,6 +31,14 @@ impl Gameboy {
         self.execute(opcode);
     }
 
+    fn _half_carry_add_u8(&self, val_1: u8, val_2: u8) -> bool {
+        ((val_1 & 0xF) + (val_2 & 0xF)) & 0x10 == 0x10
+    }
+
+    fn _half_carry_sub_u8(&self, value_a: u8, value_b: u8) -> bool {
+        (value_a & 0xF) < (value_b & 0xF)
+    }
+
     fn execute(&mut self, opcode: u8) {
         // Opcode table: https://izik1.github.io/gbops/index.html
         match opcode {
@@ -60,8 +68,8 @@ impl Gameboy {
             0x14 => self.inc_r(RegisterU8::D),
             0x15 => self.dec_r(RegisterU8::D),
             0x16 => self.ld_r_n(RegisterU8::D),
-            0x17 => todo!(),
-            0x18 => todo!(),
+            0x17 => self.rla(),
+            0x18 => self.jr_e(),
             0x19 => todo!(),
             0x1A => self.ld_a_de(),
             0x1B => todo!(),
@@ -97,7 +105,7 @@ impl Gameboy {
             0x35 => todo!(),
             0x36 => todo!(),
             0x37 => todo!(),
-            0x38 => self.jr_cc_e(FlagConds::NC),
+            0x38 => self.jr_cc_e(FlagConds::C),
             0x39 => todo!(),
             0x3A => todo!(),
             0x3B => todo!(),
@@ -178,6 +186,42 @@ impl Gameboy {
             0x7E => self.ld_r_hl(RegisterU8::A),
             0x7F => self.ld_r_r(RegisterU8::A, RegisterU8::A),
 
+            //0x8 opcodes
+            0x80 => todo!(),
+            0x81 => todo!(),
+            0x82 => todo!(),
+            0x83 => todo!(),
+            0x84 => todo!(),
+            0x85 => todo!(),
+            0x86 => todo!(),
+            0x87 => todo!(),
+            0x88 => todo!(),
+            0x89 => todo!(),
+            0x8A => todo!(),
+            0x8B => todo!(),
+            0x8C => todo!(),
+            0x8D => todo!(),
+            0x8E => todo!(),
+            0x8F => todo!(),
+
+            //0x9 opcodes
+            0x90 => todo!(),
+            0x91 => todo!(),
+            0x92 => todo!(),
+            0x93 => todo!(),
+            0x94 => todo!(),
+            0x95 => todo!(),
+            0x96 => todo!(),
+            0x97 => todo!(),
+            0x98 => todo!(),
+            0x99 => todo!(),
+            0x9A => todo!(),
+            0x9B => todo!(),
+            0x9C => todo!(),
+            0x9D => todo!(),
+            0x9E => todo!(),
+            0x9F => todo!(),
+
             //0xA opcodes
             0xA0 => todo!(),
             0xA1 => todo!(),
@@ -216,7 +260,7 @@ impl Gameboy {
 
             //0xC opcodes
             0xC0 => todo!(),
-            0xC1 => todo!(),
+            0xC1 => self.pop(RegisterU16::BC),
             0xC2 => todo!(),
             0xC3 => todo!(),
             0xC4 => todo!(),
@@ -224,7 +268,7 @@ impl Gameboy {
             0xC6 => todo!(),
             0xC7 => todo!(),
             0xC8 => todo!(),
-            0xC9 => todo!(),
+            0xC9 => self.ret(),
             0xCA => todo!(),
             0xCB => self.cb_prefix(),
             0xCC => todo!(),
@@ -234,7 +278,7 @@ impl Gameboy {
 
             //0xD opcodes
             0xD0 => todo!(),
-            0xD1 => todo!(),
+            0xD1 => self.pop(RegisterU16::DE),
             0xD2 => todo!(),
             0xD3 => todo!(),
             0xD4 => todo!(),
@@ -252,7 +296,7 @@ impl Gameboy {
 
             //0xE opcodes
             0xE0 => self.ldh_n_a(),
-            0xE1 => todo!(),
+            0xE1 => self.pop(RegisterU16::HL),
             0xE2 => self.ldh_c_a(),
             0xE3 => todo!(),
             0xE4 => todo!(),
@@ -261,7 +305,7 @@ impl Gameboy {
             0xE7 => todo!(),
             0xE8 => todo!(),
             0xE9 => todo!(),
-            0xEA => todo!(),
+            0xEA => self.ld_nn_a(),
             0xEB => todo!(),
             0xEC => todo!(),
             0xED => todo!(),
@@ -269,8 +313,8 @@ impl Gameboy {
             0xEF => todo!(),
 
             //0xF opcodes
-            0xF0 => todo!(),
-            0xF1 => todo!(),
+            0xF0 => self.ldh_a_n(),
+            0xF1 => self.pop(RegisterU16::AF),
             0xF2 => todo!(),
             0xF3 => todo!(),
             0xF4 => todo!(),
@@ -295,6 +339,24 @@ fn cb_prefix(&mut self) {
     self.cpu.register.pc += 1;
 
     match cb_code {
+        // 0x1 codes
+        0x10 => self.rl_r(RegisterU8::B),
+        0x11 => self.rl_r(RegisterU8::C),
+        0x12 => self.rl_r(RegisterU8::D),
+        0x13 => self.rl_r(RegisterU8::E),
+        0x14 => self.rl_r(RegisterU8::H),
+        0x15 => self.rl_r(RegisterU8::L),
+        0x16 => todo!(),
+        0x17 => self.rl_r(RegisterU8::A),
+        0x18 => todo!(),
+        0x19 => todo!(),
+        0x1A => todo!(),
+        0x1B => todo!(),
+        0x1C => todo!(),
+        0x1D => todo!(),
+        0x1E => todo!(),
+        0x1F => todo!(),
+
         // 0x4 codes
         0x40 => self.bit_r(RegisterU8::B, 0),
         0x41 => self.bit_r(RegisterU8::C, 0),
@@ -407,12 +469,36 @@ fn cb_prefix(&mut self) {
         self.cpu.register.write_u8(RegisterU8::A, data);
     }
 
+    fn ld_nn_a(&mut self) {
+        let lsb = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let msb = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let reg_data = self.cpu.register.read_u8(RegisterU8::A);
+        let nn = (msb as u16) << 8 | lsb as u16;
+
+        self.write_instruction(nn, reg_data);
+    }
+
     fn ldh_c_a(&mut self) {
         let msb: u16 = 0xFF00;
         let lsb = self.cpu.register.read_u8(RegisterU8::C) as u16;
         let address = msb | lsb;
 
         let data = self.read_instruction(address);
+        self.cpu.register.write_u8(RegisterU8::A, data);
+    }
+
+    fn ldh_a_n(&mut self) {
+        let msb: u16 = 0xFF00;
+        let lsb = self.read_instruction(self.cpu.register.pc) as u16;
+        self.cpu.register.pc += 1;
+
+        let address = msb | lsb;
+        let data = self.read_instruction(address);
+
         self.cpu.register.write_u8(RegisterU8::A, data);
     }
 
@@ -469,16 +555,20 @@ fn cb_prefix(&mut self) {
         self.write_instruction(self.cpu.register.sp, lsb);
     }
 
+    fn pop(&mut self, r1: RegisterU16) {
+        let lsb = self.read_instruction(self.cpu.register.sp);
+        self.cpu.register.sp += 1;
+        
+        let msb = self.read_instruction(self.cpu.register.sp);
+        self.cpu.register.sp += 1;
+
+        let data = (msb as u16) << 8 | lsb as u16;
+        self.cpu.register.write_u16(r1, data);
+    }
+
     // ALU Instructions
 
     // 8 bit ALU
-    fn _half_carry_add_u8(&self, val_1: u8, val_2: u8) -> bool {
-        ((val_1 & 0xF) + (val_2 & 0xF)) & 0x10 == 0x10
-    }
-
-    fn _half_carry_sub_u8(&self, value_a: u8, value_b: u8) -> bool {
-        (value_a & 0xF) < (value_b & 0xF)
-    }
 
     fn cp_n(&mut self) {
         let data = self.read_instruction(self.cpu.register.pc);
@@ -584,6 +674,15 @@ fn cb_prefix(&mut self) {
     }
 
     // Control flow instructions
+    fn jr_e(&mut self) {
+        let offset = self.read_instruction(self.cpu.register.pc) as i8;
+        self.cpu.register.pc += 1;
+        let mut new_pc = self.cpu.register.pc;
+
+        new_pc = new_pc.wrapping_add_signed(offset as i16);
+        self.cpu.register.pc = new_pc;
+    }
+
     fn jr_cc_e(&mut self, jp_cond: FlagConds) {
         let offset = self.read_instruction(self.cpu.register.pc) as i8;
         self.cpu.register.pc += 1;
@@ -638,11 +737,70 @@ fn cb_prefix(&mut self) {
         self.cpu.register.pc = nn;
     }
 
+    fn ret(&mut self) {
+        let lsb = self.read_instruction(self.cpu.register.sp);
+        self.cpu.register.sp += 1;
+        
+        let msb = self.read_instruction(self.cpu.register.sp);
+        self.cpu.register.sp += 1;
+
+        self.cpu.register.pc = (msb as u16) << 8 | lsb as u16;
+    }
+
+    // Rotate instructions
+    fn rla(&mut self) {
+        let carry_flag = self.cpu.flags.get_flag(Flag::C);
+        let reg_data = self.cpu.register.read_u8(RegisterU8::A);
+
+        let new_carry_flag: bool = (reg_data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let mut new_reg_data = reg_data << 1;
+        new_reg_data = new_reg_data & 0b1111_1110;
+
+        if carry_flag {
+            new_reg_data += 1;
+            self.cpu.register.write_u8(RegisterU8::A, new_reg_data);
+        }
+        else {
+            self.cpu.register.write_u8(RegisterU8::A, new_reg_data);
+        }
+
+        self.cpu.flags.set_flag(Flag::Z, false);
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+    }
+
 
     // CB Prefix codes
     fn rl_r(&mut self, r1: RegisterU8) {
-        todo!()
+        let carry_flag = self.cpu.flags.get_flag(Flag::C);
+        let reg_data = self.cpu.register.read_u8(r1);
+
+        let new_carry_flag: bool = (reg_data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let mut new_reg_data = reg_data << 1;
+        new_reg_data = new_reg_data & 0b1111_1110;
+
+        if carry_flag {
+            new_reg_data += 1;
+            self.cpu.register.write_u8(r1, new_reg_data);
+        }
+        else {
+            self.cpu.register.write_u8(r1, new_reg_data);
+        }
+
+        if new_reg_data == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
     }
+
 
     fn bit_r(&mut self, r1: RegisterU8, check_bit: u8) {
         let mask: u8 = 1;
@@ -660,8 +818,6 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::H, true);
         self.cpu.flags.set_flag(Flag::N, false);
     }
-
-
 }
 
 #[cfg(test)]
@@ -759,6 +915,21 @@ mod tests {
     }
 
     #[test]
+    fn test_ld_nn_a() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0x01);
+        gameboy.write_instruction(0x0, 0xFE);
+        gameboy.write_instruction(0x01, 0xFF);
+
+        gameboy.ld_nn_a();
+
+        let data_in_memory = gameboy.read_instruction(0xFFFE);
+        assert_eq!(data_in_memory, 0x01);
+    }
+
+    #[test]
     fn test_ldh_c_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
@@ -772,6 +943,22 @@ mod tests {
         let new_a = gameboy.cpu.register.read_u8(r1);
         //println!("\n new_a: {:#X}\n", new_a);
         assert_eq!(new_a, 0x01);
+    }
+
+    #[test]
+    fn test_ldh_a_n() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0xFA);
+        gameboy.write_instruction(0xFFFA, 0x01);
+
+        gameboy.ldh_a_n();
+
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        assert_eq!(new_r1, 0x01);
     }
 
     #[test]
@@ -863,6 +1050,27 @@ mod tests {
 
         let msb = gameboy.read_instruction(0xFFFE - 1);
         let lsb = gameboy.read_instruction(0xFFFE - 2);
+
+        assert_eq!(msb, 0xFA);
+        assert_eq!(lsb, 0xFB);
+    }
+
+    #[test]
+    fn test_pop() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU16::BC;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.sp = 0xFFFC;
+        gameboy.write_instruction(0xFFFC, 0xFB);
+        gameboy.write_instruction(0xFFFC + 1, 0xFA);
+
+        gameboy.pop(r1);
+        let data = gameboy.cpu.register.read_u16(r1);
+        let msb_and_lsb = Registers::u16_to_u8(data);
+        let msb = msb_and_lsb[0];
+        let lsb = msb_and_lsb[1];
 
         assert_eq!(msb, 0xFA);
         assert_eq!(lsb, 0xFB);
@@ -986,8 +1194,22 @@ mod tests {
         assert_eq!(reg_data, 1);
     }
 
-
     // Control flow tests
+    #[test]
+    fn test_jr_e() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.pc = 0x0B;
+        gameboy.write_instruction(0x0B, 0xFB);
+
+        // Run test and compare output
+        gameboy.jr_e();
+        let new_pc = gameboy.cpu.register.pc;
+        assert_eq!(new_pc, 0x07);
+    }
+
     #[test]
     fn test_jr_cc_e() {
         // Create a gameboy for testing purposes
@@ -997,8 +1219,9 @@ mod tests {
         gameboy.cpu.register.pc = 0x0B;
         gameboy.write_instruction(0x0B, 0xFB);
         gameboy.cpu.flags.set_flag(Flag::C, false);
-        gameboy.jr_cc_e(FlagConds::NC);
 
+        // Run test and compare output
+        gameboy.jr_cc_e(FlagConds::NC);
 
         let new_pc = gameboy.cpu.register.pc;
         assert_eq!(new_pc, 0x07);
@@ -1026,6 +1249,60 @@ mod tests {
         assert_eq!(new_pc, 0x0201);
         assert_eq!(msb, 0x02);
         assert_eq!(lsb, 0x01);
+    }
+
+    #[test]
+    fn test_ret() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.sp = 0xFFFC;
+        gameboy.write_instruction(0xFFFC, 0xFB);
+        gameboy.write_instruction(0xFFFC + 1, 0xFA);
+
+        gameboy.ret();
+
+        let new_pc = gameboy.cpu.register.pc;
+        assert_eq!(new_pc, 0xFAFB);
+    }
+
+    // Rotate instructions tests
+    #[test]
+    fn test_rla() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.cpu.flags.set_flag(Flag::C, true);
+        gameboy.cpu.register.write_u8(r1, 0b1101_0010);
+
+        gameboy.rl_r(r1);
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0101);
+        assert_eq!(carry_flag, true);
+    }
+
+    // CB prefix tests
+    #[test]
+    fn test_rl_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.cpu.flags.set_flag(Flag::C, true);
+        gameboy.cpu.register.write_u8(r1, 0b1101_0010);
+
+        gameboy.rl_r(r1);
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0101);
+        assert_eq!(carry_flag, true);
     }
 
     #[test]
