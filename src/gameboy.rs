@@ -27,8 +27,10 @@ impl Gameboy {
 
     pub fn fetch (&mut self) {
         let opcode = self.read_instruction(self.cpu.register.pc);
+        println!("PC: {:#X}", self.cpu.register.pc);
         self.cpu.register.pc += 1;
         self.execute(opcode);
+        println!("Opcode: {:#X}, Registers: {:?}", opcode, self.cpu.register);
     }
 
     fn _half_carry_add_u8(&self, val_1: u8, val_2: u8) -> bool {
@@ -193,7 +195,7 @@ impl Gameboy {
             0x83 => todo!(),
             0x84 => todo!(),
             0x85 => todo!(),
-            0x86 => todo!(),
+            0x86 => self.add_hl(),
             0x87 => todo!(),
             0x88 => todo!(),
             0x89 => todo!(),
@@ -201,18 +203,18 @@ impl Gameboy {
             0x8B => todo!(),
             0x8C => todo!(),
             0x8D => todo!(),
-            0x8E => todo!(),
+            0x8E => self.cp_hl(),
             0x8F => todo!(),
 
             //0x9 opcodes
-            0x90 => todo!(),
-            0x91 => todo!(),
-            0x92 => todo!(),
-            0x93 => todo!(),
-            0x94 => todo!(),
-            0x95 => todo!(),
+            0x90 => self.sub_r(RegisterU8::B),
+            0x91 => self.sub_r(RegisterU8::C),
+            0x92 => self.sub_r(RegisterU8::D),
+            0x93 => self.sub_r(RegisterU8::E),
+            0x94 => self.sub_r(RegisterU8::H),
+            0x95 => self.sub_r(RegisterU8::L),
             0x96 => todo!(),
-            0x97 => todo!(),
+            0x97 => self.sub_r(RegisterU8::A),
             0x98 => todo!(),
             0x99 => todo!(),
             0x9A => todo!(),
@@ -569,6 +571,73 @@ fn cb_prefix(&mut self) {
     // ALU Instructions
 
     // 8 bit ALU
+    fn add_hl(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+
+        let add_result = reg_a.overflowing_add(data);
+        let carry_flag = add_result.1;
+        let half_carry_flag = self._half_carry_add_u8(reg_a, data);
+
+        self.cpu.register.write_u8(RegisterU8::A, add_result.0);
+
+        if add_result.0 == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.flags.set_flag(Flag::C, carry_flag);
+    }
+
+    fn sub_r(&mut self, r1: RegisterU8) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let reg_data = self.cpu.register.read_u8(r1);
+
+        let sub_result = reg_a.overflowing_sub(reg_data);
+        let carry_flag = sub_result.1;
+
+        self.cpu.register.write_u8(RegisterU8::A, sub_result.0);
+
+        let half_carry_flag = self._half_carry_sub_u8(reg_a, reg_data);
+
+        if sub_result.0 == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, true);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.flags.set_flag(Flag::C, carry_flag);
+    }
+
+    fn cp_hl(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+
+        let data = self.read_instruction(address);
+
+        let sub_result = reg_a.overflowing_sub(data);
+        let carry_flag = sub_result.1;
+        let half_carry_flag = self._half_carry_sub_u8(reg_a, data);
+
+        if sub_result.0 == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, true);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.flags.set_flag(Flag::C, carry_flag);
+    }
 
     fn cp_n(&mut self) {
         let data = self.read_instruction(self.cpu.register.pc);
@@ -826,7 +895,7 @@ mod tests {
 
     // ld tests
     #[test]
-    fn test_ld_r_r() {
+    fn ld_r_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -845,7 +914,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_r_n() {
+    fn ld_r_n() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -865,7 +934,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_r_hl() {
+    fn ld_r_hl() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -883,7 +952,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_hl_r() {
+    fn ld_hl_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -900,7 +969,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_a_de() {
+    fn ld_a_de() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -915,7 +984,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_nn_a() {
+    fn ld_nn_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -930,7 +999,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ldh_c_a() {
+    fn ldh_c_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -946,7 +1015,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ldh_a_n() {
+    fn ldh_a_n() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -962,7 +1031,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ldh_n_a() {
+    fn ldh_n_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -975,7 +1044,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_hl_minus_a() {
+    fn ld_hl_minus_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -995,7 +1064,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_hl_plus_a() {
+    fn ld_hl_plus_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -1012,7 +1081,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ld_rr_nn() {
+    fn ld_rr_nn() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU16::AF;
@@ -1037,7 +1106,7 @@ mod tests {
     }
 
     #[test]
-    fn test_push() {
+    fn push() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU16::BC;
@@ -1056,7 +1125,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pop() {
+    fn pop() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU16::BC;
@@ -1077,7 +1146,80 @@ mod tests {
     }
 
     #[test]
-    fn test_cp_n() {
+    fn add_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0xFF);
+        gameboy.write_instruction(0x0, 0x1);
+
+        // Run test and compare output
+        gameboy.add_hl();
+
+        let reg_a = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(reg_a, 0x0);
+        assert_eq!(n_flag, false);
+        assert_eq!(z_flag, true);
+        assert_eq!(hc_flag, true);
+        assert_eq!(c_flag, true);
+    }
+
+    #[test]
+    fn sub_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::B, 0x1);
+
+        // Run test and compare output
+        gameboy.sub_r(RegisterU8::B);
+        let new_r1 = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0xFF);
+        assert_eq!(n_flag, true);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, true);
+        assert_eq!(c_flag, true);
+    }
+
+    #[test]
+    fn cp_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u16(RegisterU16::HL, 0xFFFA);
+        gameboy.write_instruction(0xFFFA, 0x01);
+
+        // Run test and compare output
+        gameboy.cp_hl();
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(n_flag, true);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, true);
+        assert_eq!(c_flag, true);
+    }
+
+    #[test]
+    fn cp_n() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -1102,7 +1244,7 @@ mod tests {
 
     // ALU tests
     #[test]
-    fn test_inc_r() {
+    fn inc_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -1124,7 +1266,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dec_r() {
+    fn dec_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -1142,7 +1284,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xor() {
+    fn xor() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::B;
@@ -1160,7 +1302,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xor_hl() {
+    fn xor_hl() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -1182,7 +1324,7 @@ mod tests {
 
     // 16 bit ALU test
     #[test]
-    fn test_inc_rr() {
+    fn inc_rr() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU16::DE;
@@ -1196,7 +1338,7 @@ mod tests {
 
     // Control flow tests
     #[test]
-    fn test_jr_e() {
+    fn jr_e() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -1211,7 +1353,7 @@ mod tests {
     }
 
     #[test]
-    fn test_jr_cc_e() {
+    fn jr_cc_e() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -1228,7 +1370,7 @@ mod tests {
     }
 
     #[test]
-    fn test_call_nn() {
+    fn call_nn() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -1252,7 +1394,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ret() {
+    fn ret() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
 
@@ -1269,7 +1411,7 @@ mod tests {
 
     // Rotate instructions tests
     #[test]
-    fn test_rla() {
+    fn rla() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -1288,7 +1430,7 @@ mod tests {
 
     // CB prefix tests
     #[test]
-    fn test_rl_r() {
+    fn rl_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
@@ -1306,7 +1448,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bit_r() {
+    fn bit_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::A;
