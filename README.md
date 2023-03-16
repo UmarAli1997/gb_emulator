@@ -12,6 +12,6 @@ The main goals of this project are to:
 
 ## Status
 
-I am currently working on implementing the CPU.
-The current goal is to implement the instructions required to load a bootrom.
-Once the instructions are implemented I will work on the PPU (Picture Processing Unit) to be able to display an image.
+CPU instructions are implemented for the DMG bootrom.
+The next stage is to debug the instruction set to make sure the CPU is behaving as it should.
+In parallel I will have to implement the PPU (Picture Processing Unit) as well as interrupts and timer most likely to be able to continue debugging.
