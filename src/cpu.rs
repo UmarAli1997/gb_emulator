@@ -44,6 +44,7 @@ pub struct FlagsRegister {
     c: bool
 }
 
+#[derive(Debug)]
 pub struct Registers {
     a: u8,
     b: u8,
@@ -125,6 +126,7 @@ impl FlagsRegister {
     }
 
 }
+
 
 impl Registers {
     pub fn read_u8(&self, reg: RegisterU8) -> u8 {
