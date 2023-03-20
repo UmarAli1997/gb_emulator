@@ -27,10 +27,12 @@ impl Gameboy {
 
     pub fn fetch (&mut self) {
         let opcode = self.read_instruction(self.cpu.register.pc);
-        println!("PC: {:#X}", self.cpu.register.pc);
+        //println!("PC: {:#X}", self.cpu.register.pc);
+        println!("Opcode: {:#X}, \n A: {:#X} F: {:#X}, B: {:#X}, C: {:#X}, D: {:#X}, E: {:#X}, H: {:#X}, L: {:#X}, SP: {:#X}, PC: {:#X}", opcode, self.cpu.register.a,
+        self.cpu.register.f, self.cpu.register.b, self.cpu.register.c, self.cpu.register.d, self.cpu.register.e, self.cpu.register.h, self.cpu.register.l, self.cpu.register.sp,
+        self.cpu.register.pc);
         self.cpu.register.pc += 1;
         self.execute(opcode);
-        println!("Opcode: {:#X}, Registers: {:?}", opcode, self.cpu.register);
     }
 
     fn _half_carry_add_u8(&self, val_1: u8, val_2: u8) -> bool {
@@ -441,7 +443,6 @@ fn cb_prefix(&mut self) {
 
     // 8 bit load instructions
     fn ld_r_r(&mut self, r1: RegisterU8, r2: RegisterU8) {
-        //println!("LD_r_r")
         let reg2 = self.cpu.register.read_u8(r2);
         self.cpu.register.write_u8(r1, reg2)
         
@@ -487,10 +488,11 @@ fn cb_prefix(&mut self) {
     fn ldh_c_a(&mut self) {
         let msb: u16 = 0xFF00;
         let lsb = self.cpu.register.read_u8(RegisterU8::C) as u16;
-        let address = msb | lsb;
+        let address = msb + lsb;
 
-        let data = self.read_instruction(address);
-        self.cpu.register.write_u8(RegisterU8::A, data);
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+
+        self.write_instruction(address, reg_a);
     }
 
     fn ldh_a_n(&mut self) {
@@ -498,7 +500,7 @@ fn cb_prefix(&mut self) {
         let lsb = self.read_instruction(self.cpu.register.pc) as u16;
         self.cpu.register.pc += 1;
 
-        let address = msb | lsb;
+        let address = msb + lsb;
         let data = self.read_instruction(address);
 
         self.cpu.register.write_u8(RegisterU8::A, data);
@@ -508,7 +510,7 @@ fn cb_prefix(&mut self) {
         let msb: u16 = 0xFF00;
         let lsb = self.read_instruction(self.cpu.register.pc) as u16;
         self.cpu.register.pc += 1;
-        let address = msb | lsb;
+        let address = msb + lsb;
 
         let data = self.cpu.register.read_u8(RegisterU8::A);
         self.write_instruction(address, data);
@@ -592,6 +594,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, half_carry_flag);
         self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn sub_r(&mut self, r1: RegisterU8) {
@@ -615,6 +618,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, true);
         self.cpu.flags.set_flag(Flag::H, half_carry_flag);
         self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn cp_hl(&mut self) {
@@ -637,6 +641,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, true);
         self.cpu.flags.set_flag(Flag::H, half_carry_flag);
         self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn cp_n(&mut self) {
@@ -660,6 +665,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, true);
         self.cpu.flags.set_flag(Flag::H, half_carry_flag);
         self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn inc_r(&mut self, r1: RegisterU8) {
@@ -679,6 +685,7 @@ fn cb_prefix(&mut self) {
 
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn dec_r(&mut self, r1: RegisterU8) {
@@ -698,6 +705,7 @@ fn cb_prefix(&mut self) {
 
         self.cpu.flags.set_flag(Flag::N, true);
         self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn xor(&mut self, r1: RegisterU8) {
@@ -714,6 +722,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, false);
         self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn xor_hl(&mut self) {
@@ -731,6 +740,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, false);
         self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     // 16 bit ALU
@@ -838,6 +848,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::Z, false);
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
 
@@ -868,6 +879,7 @@ fn cb_prefix(&mut self) {
         }
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
 
@@ -886,6 +898,7 @@ fn cb_prefix(&mut self) {
         // Setting half carry flag and unsetting negative flag as per instruction
         self.cpu.flags.set_flag(Flag::H, true);
         self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 }
 
@@ -1002,16 +1015,15 @@ mod tests {
     fn ldh_c_a() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
-        let r1 = RegisterU8::A;
 
         // Set up gameboy state for test
         gameboy.cpu.register.write_u8(RegisterU8::C, 0xFF);
-        gameboy.write_instruction(0xFFFF, 0x01);
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0x01);
 
         gameboy.ldh_c_a();
-        let new_a = gameboy.cpu.register.read_u8(r1);
+        let data_in_memory = gameboy.read_instruction(0xFFFF);
         //println!("\n new_a: {:#X}\n", new_a);
-        assert_eq!(new_a, 0x01);
+        assert_eq!(data_in_memory, 0x01);
     }
 
     #[test]
