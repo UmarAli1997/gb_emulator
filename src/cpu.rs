@@ -173,37 +173,31 @@ impl Registers {
     pub fn write_u16(&mut self, reg: RegisterU16, val: u16) {
         match reg {
             RegisterU16::AF => {
-                let two_bytes = Registers::u16_to_u8(val);
-                self.write_u8(RegisterU8::A, two_bytes[0]);
-                self.write_u8(RegisterU8::F, two_bytes[1]);
+                let [lsb, msb] = val.to_le_bytes();
+                self.write_u8(RegisterU8::A, msb);
+                self.write_u8(RegisterU8::F, lsb);
             }
 
             RegisterU16::BC => {
-                let two_bytes = Registers::u16_to_u8(val);
-                self.write_u8(RegisterU8::B, two_bytes[0]);
-                self.write_u8(RegisterU8::C, two_bytes[1]);
+                let [lsb, msb] = val.to_le_bytes();
+                self.write_u8(RegisterU8::B, msb);
+                self.write_u8(RegisterU8::C, lsb);
             }
 
             RegisterU16::DE => {
-                let two_bytes = Registers::u16_to_u8(val);
-                self.write_u8(RegisterU8::D, two_bytes[0]);
-                self.write_u8(RegisterU8::E, two_bytes[1]);
+                let [lsb, msb] = val.to_le_bytes();
+                self.write_u8(RegisterU8::D, msb);
+                self.write_u8(RegisterU8::E, lsb);
             }
 
             RegisterU16::HL => {
-                let two_bytes = Registers::u16_to_u8(val);
-                self.write_u8(RegisterU8::H, two_bytes[0]);
-                self.write_u8(RegisterU8::L, two_bytes[1]);
+                let [lsb, msb] = val.to_le_bytes();
+                self.write_u8(RegisterU8::H, msb);
+                self.write_u8(RegisterU8::L, lsb);
             }
 
             RegisterU16::PC => self.pc = val,
             RegisterU16::SP => self.sp = val,
         }
-    }
-
-    pub fn u16_to_u8(val: u16) -> [u8; 2] {
-        let high_byte = (val >> 8) as u8;
-        let low_byte = (val & 0xFF) as u8;
-        return [high_byte, low_byte];
     }
 }
