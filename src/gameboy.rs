@@ -488,7 +488,7 @@ fn cb_prefix(&mut self) {
     fn ldh_c_a(&mut self) {
         let msb: u16 = 0xFF00;
         let lsb = self.cpu.register.read_u8(RegisterU8::C) as u16;
-        let address = msb + lsb;
+        let address = msb | lsb;
 
         let reg_a = self.cpu.register.read_u8(RegisterU8::A);
 
@@ -500,7 +500,7 @@ fn cb_prefix(&mut self) {
         let lsb = self.read_instruction(self.cpu.register.pc) as u16;
         self.cpu.register.pc += 1;
 
-        let address = msb + lsb;
+        let address = msb | lsb;
         let data = self.read_instruction(address);
 
         self.cpu.register.write_u8(RegisterU8::A, data);
@@ -510,7 +510,7 @@ fn cb_prefix(&mut self) {
         let msb: u16 = 0xFF00;
         let lsb = self.read_instruction(self.cpu.register.pc) as u16;
         self.cpu.register.pc += 1;
-        let address = msb + lsb;
+        let address = msb | lsb;
 
         let data = self.cpu.register.read_u8(RegisterU8::A);
         self.write_instruction(address, data);
@@ -548,10 +548,7 @@ fn cb_prefix(&mut self) {
 
     fn push(&mut self, r1: RegisterU16) {
         let reg_data = self.cpu.register.read_u16(r1);
-        let msb_and_lsb = Registers::u16_to_u8(reg_data);
-
-        let msb = msb_and_lsb[0];
-        let lsb = msb_and_lsb[1];
+        let [lsb, msb] = reg_data.to_le_bytes();
 
         self.cpu.register.sp -= 1;
         self.write_instruction(self.cpu.register.sp, msb);
@@ -809,10 +806,12 @@ fn cb_prefix(&mut self) {
         self.cpu.register.pc += 1;
         let nn = (msb as u16) << 8 | lsb as u16;
 
+        let [lsb_pc, msb_pc] = self.cpu.register.pc.to_le_bytes();
+
         self.cpu.register.sp -= 1;
-        self.write_instruction(self.cpu.register.sp, msb);
+        self.write_instruction(self.cpu.register.sp, msb_pc);
         self.cpu.register.sp -= 1;
-        self.write_instruction(self.cpu.register.sp, lsb);
+        self.write_instruction(self.cpu.register.sp, lsb_pc);
         self.cpu.register.pc = nn;
     }
 
@@ -1022,7 +1021,7 @@ mod tests {
 
         gameboy.ldh_c_a();
         let data_in_memory = gameboy.read_instruction(0xFFFF);
-        //println!("\n new_a: {:#X}\n", new_a);
+
         assert_eq!(data_in_memory, 0x01);
     }
 
@@ -1149,9 +1148,7 @@ mod tests {
 
         gameboy.pop(r1);
         let data = gameboy.cpu.register.read_u16(r1);
-        let msb_and_lsb = Registers::u16_to_u8(data);
-        let msb = msb_and_lsb[0];
-        let lsb = msb_and_lsb[1];
+        let [lsb, msb] = data.to_le_bytes();
 
         assert_eq!(msb, 0xFA);
         assert_eq!(lsb, 0xFB);
@@ -1401,8 +1398,8 @@ mod tests {
 
         assert_eq!(new_sp, 0xFFFC);
         assert_eq!(new_pc, 0x0201);
-        assert_eq!(msb, 0x02);
-        assert_eq!(lsb, 0x01);
+        assert_eq!(msb, 0x0);
+        assert_eq!(lsb, 0x02);
     }
 
     #[test]
