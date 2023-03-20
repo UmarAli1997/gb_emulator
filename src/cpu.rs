@@ -16,16 +16,16 @@ impl CPU {
     pub fn new() -> CPU {
         let cpu = CPU {
             register: Registers {
-                a: 0,
-                b: 0,
-                c: 0,
-                d: 0,
-                f: 0,
-                e: 0,
-                h: 0,
-                l: 0,
-                pc: 0,
-                sp: 0,
+                a: 0x0,
+                b: 0x0,
+                c: 0x0,
+                d: 0x0,
+                f: 0x0,
+                e: 0x0,
+                h: 0x0,
+                l: 0x0,
+                pc: 0x0,
+                sp: 0x0,
             },
             flags: FlagsRegister { z: false, n: false, h: false, c: false }
         };
@@ -33,6 +33,7 @@ impl CPU {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct FlagsRegister {
     // Zero flag
     z: bool,
@@ -46,14 +47,14 @@ pub struct FlagsRegister {
 
 #[derive(Debug)]
 pub struct Registers {
-    a: u8,
-    b: u8,
-    c: u8,
-    d: u8,
-    e: u8,
-    f: u8,
-    h: u8,
-    l: u8,
+    pub a: u8,
+    pub b: u8,
+    pub c: u8,
+    pub d: u8,
+    pub e: u8,
+    pub f: u8,
+    pub h: u8,
+    pub l: u8,
     pub pc: u16,
     pub sp: u16
 }
@@ -124,7 +125,6 @@ impl FlagsRegister {
             Flag::C => self.c = val
         }
     }
-
 }
 
 
@@ -142,6 +142,10 @@ impl Registers {
         }
     }
 
+    pub fn update_f_reg(&mut self, val: FlagsRegister) { 
+        self.write_u8(RegisterU8::F, val.into());
+    }
+
     pub fn write_u8(&mut self, reg: RegisterU8, val: u8) {
         match reg {
             RegisterU8::A => self.a = val,
@@ -149,7 +153,7 @@ impl Registers {
             RegisterU8::C => self.c = val,
             RegisterU8::D => self.d = val,
             RegisterU8::E => self.e = val,
-            RegisterU8::F => self.f = val, // This needs to be masked to the correct flag
+            RegisterU8::F => self.f = val,
             RegisterU8::H => self.h = val,
             RegisterU8::L => self.l = val,
         }
@@ -202,5 +206,4 @@ impl Registers {
         let low_byte = (val & 0xFF) as u8;
         return [high_byte, low_byte];
     }
-
 }
