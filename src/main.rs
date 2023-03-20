@@ -11,10 +11,14 @@ fn main() {
 
     let mut gameboy = Gameboy::new();
 
-    let boot_path = Path::new("../../BOOT/dmg_boot.bin");
+    let boot_path = Path::new("./BOOT/dmg_boot.bin");
     let boot_rom = fs::read(boot_path).expect("File not found!");
 
+    let cart_path = Path::new("./BOOT/Tetris (World) (Rev 1).gb");
+    let cart = fs::read(cart_path).expect("File not found!");
+
     gameboy.memory.copy_to_ram(0, &boot_rom);
+    gameboy.memory.copy_to_ram(0x100, &cart);
 
     // for val in boot_rom.iter() {
     //     //println!("{:#X}", val)
@@ -26,9 +30,11 @@ fn main() {
     //     println!("{:#X}: {}", i, item);
     // }
 
+    let mut counter = 1;
     loop {
+        println!("{}", counter);
         gameboy.fetch();
-        //println!("{:?}", gameboy.memory.ram);
+        counter += 1;
     }
 
 }
