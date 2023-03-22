@@ -28,7 +28,7 @@ impl Gameboy {
     pub fn fetch (&mut self) {
         let opcode = self.read_instruction(self.cpu.register.pc);
         //println!("PC: {:#X}", self.cpu.register.pc);
-        println!("Opcode: {:#X}, \n A: {:#X} F: {:#X}, B: {:#X}, C: {:#X}, D: {:#X}, E: {:#X}, H: {:#X}, L: {:#X}, SP: {:#X}, PC: {:#X}", opcode, self.cpu.register.a,
+        println!("Opcode: {:#X} \nA: {:#X} F: {:#X} B: {:#X} C: {:#X} D: {:#X} E: {:#X} H: {:#X} L: {:#X} SP: {:#X} PC: {:#X}", opcode, self.cpu.register.a,
         self.cpu.register.f, self.cpu.register.b, self.cpu.register.c, self.cpu.register.d, self.cpu.register.e, self.cpu.register.h, self.cpu.register.l, self.cpu.register.sp,
         self.cpu.register.pc);
         self.cpu.register.pc += 1;
@@ -205,7 +205,7 @@ impl Gameboy {
             0x8B => todo!(),
             0x8C => todo!(),
             0x8D => todo!(),
-            0x8E => self.cp_hl(),
+            0x8E => todo!(),
             0x8F => todo!(),
 
             //0x9 opcodes
@@ -259,7 +259,7 @@ impl Gameboy {
             0xBB => todo!(),
             0xBC => todo!(),
             0xBD => todo!(),
-            0xBE => todo!(),
+            0xBE => self.cp_hl(),
             0xBF => todo!(),
 
             //0xC opcodes
