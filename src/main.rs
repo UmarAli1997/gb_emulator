@@ -17,10 +17,13 @@ fn main() {
     let cart_path = Path::new("./BOOT/Tetris (World) (Rev 1).gb");
     let cart = fs::read(cart_path).expect("File not found!");
 
-    gameboy.memory.copy_to_ram(0, &cart);
-    gameboy.memory.copy_to_ram(0, &boot_rom);
-    //gameboy.memory.copy_to_ram(0x104, &nintendo_logo);
-    gameboy.write_instruction(0xFF44, 0x90);
+    let test_path = Path::new("./TEST/09-op r,r.gb");
+    let test = fs::read(test_path).expect("File not found!");
+
+    //gameboy.memory.copy_to_ram(0, &cart);
+    //gameboy.memory.copy_to_ram(0, &boot_rom);
+    gameboy.memory.copy_to_ram(0, &test);
+    //gameboy.write_instruction(0xFF44, 0x90);
 
     // for val in boot_rom.iter() {
     //     //println!("{:#X}", val)
@@ -37,9 +40,9 @@ fn main() {
         println!("{}", counter);
         gameboy.fetch();
         counter += 1;
-        if counter > 47932 {
-            gameboy.memory.copy_to_ram(0, &cart);
-        }
+        // if counter > 47932 {
+        //     gameboy.memory.copy_to_ram(0, &cart);
+        // }
     }
 
 }
