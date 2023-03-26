@@ -2,6 +2,7 @@
 /resources
 /roms
 /BOOT
+/TEST
 other_stuff.rs
 /src/instructions.rs
 .vscode
