@@ -12,6 +12,6 @@ The main goals of this project are to:
 
 ## Status
 
-CPU instructions are implemented for the DMG bootrom.
-The next stage is to debug the instruction set to make sure the CPU is behaving as it should.
-In parallel I will have to implement the PPU (Picture Processing Unit) as well as interrupts and timer most likely to be able to continue debugging.
+CPU instructions have been debugged for the DMG boot rom and I can confidently say that the CPU executes the instructions correctly.
+The next stage is to implement the rest of the CPU instructions and then use the blargg test rom set to validate my CPU.
+Once the CPU has been debugged and validated I will work on the other aspects of the emulator such as the PPU, timer and interrupts.
