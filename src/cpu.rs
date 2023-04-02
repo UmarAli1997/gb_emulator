@@ -142,6 +142,10 @@ impl Registers {
         }
     }
 
+    pub fn get_f_reg(&self, reg: FlagsRegister) -> u8 {
+        return reg.into();
+    }
+
     pub fn update_f_reg(&mut self, val: FlagsRegister) { 
         self.write_u8(RegisterU8::F, val.into());
     }
