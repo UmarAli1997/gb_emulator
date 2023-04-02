@@ -215,7 +215,7 @@ impl Gameboy {
             0x93 => self.sub_r(RegisterU8::E),
             0x94 => self.sub_r(RegisterU8::H),
             0x95 => self.sub_r(RegisterU8::L),
-            0x96 => todo!(),
+            0x96 => self.sub_hl(),
             0x97 => self.sub_r(RegisterU8::A),
             0x98 => todo!(),
             0x99 => todo!(),
@@ -820,6 +820,30 @@ fn cb_prefix(&mut self) {
         self.cpu.register.write_u8(RegisterU8::A, result);
 
         let half_carry_flag = self._half_carry_sub_u8(reg_a, reg_data);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, true);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn sub_hl(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+
+        let (result, carry_flag) = reg_a.overflowing_sub(data);
+
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        let half_carry_flag = self._half_carry_sub_u8(reg_a, data);
 
         if result == 0 {
             self.cpu.flags.set_flag(Flag::Z, true);
@@ -1661,6 +1685,30 @@ mod tests {
 
         // Run test and compare output
         gameboy.sub_r(RegisterU8::B);
+        let new_r1 = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0xFF);
+        assert_eq!(n_flag, true);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, true);
+        assert_eq!(c_flag, true);
+    }
+
+    #[test]
+    fn sub_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0x1);
+
+        // Run test and compare output
+        gameboy.sub_hl();
         let new_r1 = gameboy.cpu.register.read_u8(RegisterU8::A);
 
         let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
