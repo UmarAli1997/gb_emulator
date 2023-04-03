@@ -1,13 +1,11 @@
 pub struct MemoryBus {
     pub ram: [u8; 0x10000 as usize],
-    //ram: [u8; 0xFFFF as usize],
 }
 
 impl MemoryBus {
     pub fn new() -> Self {
         Self {
-            ram: [0; 0x10000 as usize],
-            //ram: [0; 0xFFFF as usize],
+            ram: [0xFF; 0x10000 as usize],
         }
     }
 
