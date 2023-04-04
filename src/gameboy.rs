@@ -610,7 +610,7 @@ fn cb_prefix(&mut self) {
         let [sp_lsb, sp_msb] = self.cpu.register.sp.to_le_bytes();
 
         self.write_instruction(nn, sp_lsb);
-        self.write_instruction(nn + 1, sp_msb);
+        self.write_instruction(nn.wrapping_add(1), sp_msb);
     }
 
     fn ld_sp_hl(&mut self) {
@@ -1168,6 +1168,27 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::C, false);
     }
 
+    fn and_n(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let data = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let result = reg_a & data;
+
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, true);
+        self.cpu.flags.set_flag(Flag::C, false);
+    }
+
     fn xor(&mut self, r1: RegisterU8) {
         let reg_data = self.cpu.register.read_u8(r1);
         let reg_a = self.cpu.register.read_u8(RegisterU8::A);
@@ -1570,7 +1591,7 @@ mod tests {
         gameboy.cpu.register.write_u8(r1, 0x01);
         gameboy.ldh_n_a();
 
-        let data_in_memory = gameboy.read_instruction(0xFF00);
+        let data_in_memory = gameboy.read_instruction(0xFFFF);
         assert_eq!(data_in_memory, 0x01);
     }
 
@@ -1682,12 +1703,14 @@ mod tests {
 
         // Set up gameboy state for test
         gameboy.cpu.register.write_u16(sp, 0xFFFE);
+        gameboy.write_instruction(0x0, 0x01);
+        gameboy.write_instruction(0x1, 0x02);
 
         // Run test and compare output
         gameboy.ld_nn_sp();
 
-        let sp_lsb = gameboy.read_instruction(0);
-        let sp_msb = gameboy.read_instruction(0x1);
+        let sp_lsb = gameboy.read_instruction(0x201);
+        let sp_msb = gameboy.read_instruction(0x202);
 
         assert_eq!(sp_lsb, 0xFE);
         assert_eq!(sp_msb, 0xFF);
@@ -2188,8 +2211,8 @@ mod tests {
         let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
         let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
 
-        assert_eq!(new_r1, 0xFF);
-        assert_eq!(hc_flag, true);
+        assert_eq!(new_r1, 0xFE);
+        assert_eq!(hc_flag, false);
         assert_eq!(n_flag, true);
         assert_eq!(z_flag, false);
     }
@@ -2230,6 +2253,31 @@ mod tests {
 
         // Run test and compare output
         gameboy.and_hl();
+        let reg_data = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(reg_data, 0xC8);
+        assert_eq!(n_flag, false);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, true);
+        assert_eq!(c_flag, false);
+    }
+
+    #[test]
+    fn and_n() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0xFA);
+        gameboy.write_instruction(0x0, 0xCD);
+
+        // Run test and compare output
+        gameboy.and_n();
         let reg_data = gameboy.cpu.register.read_u8(RegisterU8::A);
 
         let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
