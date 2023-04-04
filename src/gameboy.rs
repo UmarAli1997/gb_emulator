@@ -235,24 +235,24 @@ impl Gameboy {
             0xA5 => self.and_r(RegisterU8::L),
             0xA6 => self.and_hl(),
             0xA7 => self.and_r(RegisterU8::A),
-            0xA8 => self.xor(RegisterU8::B),
-            0xA9 => self.xor(RegisterU8::C),
-            0xAA => self.xor(RegisterU8::D),
-            0xAB => self.xor(RegisterU8::E),
-            0xAC => self.xor(RegisterU8::H),
-            0xAD => self.xor(RegisterU8::L),
+            0xA8 => self.xor_r(RegisterU8::B),
+            0xA9 => self.xor_r(RegisterU8::C),
+            0xAA => self.xor_r(RegisterU8::D),
+            0xAB => self.xor_r(RegisterU8::E),
+            0xAC => self.xor_r(RegisterU8::H),
+            0xAD => self.xor_r(RegisterU8::L),
             0xAE => self.xor_hl(),
-            0xAF => self.xor(RegisterU8::A),
+            0xAF => self.xor_r(RegisterU8::A),
 
             //0xB opcodes
-            0xB0 => todo!(),
-            0xB1 => todo!(),
-            0xB2 => todo!(),
-            0xB3 => todo!(),
-            0xB4 => todo!(),
-            0xB5 => todo!(),
-            0xB6 => todo!(),
-            0xB7 => todo!(),
+            0xB0 => self.or_r(RegisterU8::B),
+            0xB1 => self.or_r(RegisterU8::C),
+            0xB2 => self.or_r(RegisterU8::D),
+            0xB3 => self.or_r(RegisterU8::E),
+            0xB4 => self.or_r(RegisterU8::H),
+            0xB5 => self.or_r(RegisterU8::L),
+            0xB6 => self.or_hl(),
+            0xB7 => self.or_r(RegisterU8::A),
             0xB8 => self.cp_r(RegisterU8::B),
             0xB9 => self.cp_r(RegisterU8::C),
             0xBA => self.cp_r(RegisterU8::D),
@@ -305,7 +305,7 @@ impl Gameboy {
             0xE3 => todo!(),
             0xE4 => todo!(),
             0xE5 => self.push(RegisterU16::HL),
-            0xE6 => todo!(),
+            0xE6 => self.and_n(),
             0xE7 => todo!(),
             0xE8 => todo!(),
             0xE9 => todo!(),
@@ -313,7 +313,7 @@ impl Gameboy {
             0xEB => todo!(),
             0xEC => todo!(),
             0xED => todo!(),
-            0xEE => todo!(),
+            0xEE => self.xor_n(),
             0xEF => todo!(),
 
             //0xF opcodes
@@ -323,7 +323,7 @@ impl Gameboy {
             0xF3 => todo!(),
             0xF4 => todo!(),
             0xF5 => self.push(RegisterU16::AF),
-            0xF6 => todo!(),
+            0xF6 => self.or_n(),
             0xF7 => todo!(),
             0xF8 => todo!(),
             0xF9 => self.ld_sp_hl(),
@@ -1145,6 +1145,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, true);
         self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn and_hl(&mut self) {
@@ -1166,6 +1167,7 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, true);
         self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     fn and_n(&mut self) {
@@ -1187,9 +1189,75 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, true);
         self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
-    fn xor(&mut self, r1: RegisterU8) {
+    fn or_r(&mut self, r1: RegisterU8) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let reg_data = self.cpu.register.read_u8(r1);
+
+        let result = reg_a | reg_data;
+
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn or_hl(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+
+        let result = reg_a | data;
+
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn or_n(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let data = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let result = reg_a | data;
+
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn xor_r(&mut self, r1: RegisterU8) {
         let reg_data = self.cpu.register.read_u8(r1);
         let reg_a = self.cpu.register.read_u8(RegisterU8::A);
 
@@ -1198,6 +1266,9 @@ fn cb_prefix(&mut self) {
 
         if result == 0 {
             self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
         }
 
         self.cpu.flags.set_flag(Flag::N, false);
@@ -1216,6 +1287,30 @@ fn cb_prefix(&mut self) {
 
         if result == 0 {
             self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.flags.set_flag(Flag::C, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn xor_n(&mut self) {
+        let reg_a = self.cpu.register.read_u8(RegisterU8::A);
+        let data = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
+        let result = reg_a ^ data;
+        self.cpu.register.write_u8(RegisterU8::A, result);
+
+        if result == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
         }
 
         self.cpu.flags.set_flag(Flag::N, false);
@@ -2293,7 +2388,82 @@ mod tests {
     }
 
     #[test]
-    fn xor() {
+    fn or_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0xF0);
+        gameboy.cpu.register.write_u8(RegisterU8::B, 0x0F);
+
+        // Run test and compare output
+        gameboy.or_r(RegisterU8::B);
+        let reg_data = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(reg_data, 0xFF);
+        assert_eq!(n_flag, false);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, false);
+        assert_eq!(c_flag, false);
+    }
+
+    #[test]
+    fn or_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0xF0);
+        gameboy.write_instruction(0x0, 0x0F);
+
+        // Run test and compare output
+        gameboy.or_hl();
+        let reg_data = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(reg_data, 0xFF);
+        assert_eq!(n_flag, false);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, false);
+        assert_eq!(c_flag, false);
+    }
+
+    #[test]
+    fn or_n() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(RegisterU8::A, 0xF0);
+        gameboy.write_instruction(0x0, 0x0F);
+
+        // Run test and compare output
+        gameboy.or_n();
+        let reg_data = gameboy.cpu.register.read_u8(RegisterU8::A);
+
+        let hc_flag = gameboy.cpu.flags.get_flag(Flag::H); 
+        let n_flag = gameboy.cpu.flags.get_flag(Flag::N);
+        let z_flag = gameboy.cpu.flags.get_flag(Flag::Z);
+        let c_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(reg_data, 0xFF);
+        assert_eq!(n_flag, false);
+        assert_eq!(z_flag, false);
+        assert_eq!(hc_flag, false);
+        assert_eq!(c_flag, false);
+    }
+
+    #[test]
+    fn xor_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
         let r1 = RegisterU8::B;
@@ -2302,7 +2472,7 @@ mod tests {
         gameboy.cpu.register.write_u8(r1, 0xFF);
 
         // Run test and compare output
-        gameboy.xor(r1);
+        gameboy.xor_r(r1);
         let new_r1 = gameboy.cpu.register.read_u8(r1);
         let flag_check = gameboy.cpu.flags.get_flag(Flag::Z);
 
@@ -2323,6 +2493,26 @@ mod tests {
 
         // Run test and compare output
         gameboy.xor_hl();
+
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let flag_check = gameboy.cpu.flags.get_flag(Flag::Z);
+
+        assert_eq!(new_r1, 0x0F);
+        assert_eq!(flag_check, false);
+    }
+
+    #[test]
+    fn xor_n() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(r1, 0xFF);
+        gameboy.write_instruction(0x0, 0xF0);
+
+        // Run test and compare output
+        gameboy.xor_n();
 
         let new_r1 = gameboy.cpu.register.read_u8(r1);
         let flag_check = gameboy.cpu.flags.get_flag(Flag::Z);
