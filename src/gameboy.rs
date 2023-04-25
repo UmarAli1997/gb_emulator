@@ -115,7 +115,7 @@ impl Gameboy {
             0x33 => self.inc_rr(RegisterU16::SP),
             0x34 => self.inc_hl(),
             0x35 => self.dec_hl(),
-            0x36 => todo!(),
+            0x36 => self.ld_hl_n(),
             0x37 => self.scf(),
             0x38 => self.jr_cc_e(FlagConds::C),
             0x39 => self.add_hl_rr(RegisterU16::SP),
@@ -356,7 +356,7 @@ fn cb_prefix(&mut self) {
         0x13 => self.rl_r(RegisterU8::E),
         0x14 => self.rl_r(RegisterU8::H),
         0x15 => self.rl_r(RegisterU8::L),
-        0x16 => todo!(),
+        0x16 => self.rl_hl(),
         0x17 => self.rl_r(RegisterU8::A),
         0x18 => todo!(),
         0x19 => todo!(),
@@ -374,7 +374,7 @@ fn cb_prefix(&mut self) {
         0x43 => self.bit_r(RegisterU8::E, 0),
         0x44 => self.bit_r(RegisterU8::H, 0),
         0x45 => self.bit_r(RegisterU8::L, 0),
-        0x46 => todo!(),
+        0x46 => self.bit_hl(0),
         0x47 => self.bit_r(RegisterU8::A, 0),
         0x48 => self.bit_r(RegisterU8::B, 1),
         0x49 => self.bit_r(RegisterU8::C, 1),
@@ -382,7 +382,7 @@ fn cb_prefix(&mut self) {
         0x4B => self.bit_r(RegisterU8::E, 1),
         0x4C => self.bit_r(RegisterU8::H, 1),
         0x4D => self.bit_r(RegisterU8::L, 1),
-        0x4E => todo!(),
+        0x4E => self.bit_hl(1),
         0x4F => self.bit_r(RegisterU8::A, 1),
 
         // 0x5 codes
@@ -392,7 +392,7 @@ fn cb_prefix(&mut self) {
         0x53 => self.bit_r(RegisterU8::E, 2),
         0x54 => self.bit_r(RegisterU8::H, 2),
         0x55 => self.bit_r(RegisterU8::L, 2),
-        0x56 => todo!(),
+        0x56 => self.bit_hl(2),
         0x57 => self.bit_r(RegisterU8::A, 2),
         0x58 => self.bit_r(RegisterU8::B, 3),
         0x59 => self.bit_r(RegisterU8::C, 3),
@@ -400,7 +400,7 @@ fn cb_prefix(&mut self) {
         0x5B => self.bit_r(RegisterU8::E, 3),
         0x5C => self.bit_r(RegisterU8::H, 3),
         0x5D => self.bit_r(RegisterU8::L, 3),
-        0x5E => todo!(),
+        0x5E => self.bit_hl(3),
         0x5F => self.bit_r(RegisterU8::A, 3),
 
         // 0x6 codes
@@ -410,7 +410,7 @@ fn cb_prefix(&mut self) {
         0x63 => self.bit_r(RegisterU8::E, 4),
         0x64 => self.bit_r(RegisterU8::H, 4),
         0x65 => self.bit_r(RegisterU8::L, 4),
-        0x66 => todo!(),
+        0x66 => self.bit_hl(4),
         0x67 => self.bit_r(RegisterU8::A, 6),
         0x68 => self.bit_r(RegisterU8::B, 5),
         0x69 => self.bit_r(RegisterU8::C, 5),
@@ -418,7 +418,7 @@ fn cb_prefix(&mut self) {
         0x6B => self.bit_r(RegisterU8::E, 5),
         0x6C => self.bit_r(RegisterU8::H, 5),
         0x6D => self.bit_r(RegisterU8::L, 5),
-        0x6E => todo!(),
+        0x6E => self.bit_hl(5),
         0x6F => self.bit_r(RegisterU8::A, 5),
 
         // 0x7 codes
@@ -428,7 +428,7 @@ fn cb_prefix(&mut self) {
         0x73 => self.bit_r(RegisterU8::E, 6),
         0x74 => self.bit_r(RegisterU8::H, 6),
         0x75 => self.bit_r(RegisterU8::L, 6),
-        0x76 => todo!(),
+        0x76 => self.bit_hl(6),
         0x77 => self.bit_r(RegisterU8::A, 6),
         0x78 => self.bit_r(RegisterU8::B, 7),
         0x79 => self.bit_r(RegisterU8::C, 7),
@@ -436,7 +436,7 @@ fn cb_prefix(&mut self) {
         0x7B => self.bit_r(RegisterU8::E, 7),
         0x7C => self.bit_r(RegisterU8::H, 7),
         0x7D => self.bit_r(RegisterU8::L, 7),
-        0x7E => todo!(),
+        0x7E => self.bit_hl(7),
         0x7F => self.bit_r(RegisterU8::A, 7),
 
         _ => panic!("CB Prefixed code not implemented: {:#X}", cb_code)
@@ -445,6 +445,7 @@ fn cb_prefix(&mut self) {
 
     // CPU instructions
     // Instructions intepreted from https://gekkio.fi/files/gb-docs/gbctr.pdf
+    // and https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/
     fn nop(&self) { }
 
     // 8 bit load instructions
@@ -469,6 +470,14 @@ fn cb_prefix(&mut self) {
     fn ld_hl_r(&mut self, r1: RegisterU8) {
         let address = self.cpu.register.read_u16(RegisterU16::HL);
         let data = self.cpu.register.read_u8(r1);
+        self.write_instruction(address, data);
+    }
+
+    fn ld_hl_n(&mut self) {
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(self.cpu.register.pc);
+        self.cpu.register.pc += 1;
+
         self.write_instruction(address, data);
     }
 
@@ -1424,6 +1433,31 @@ fn cb_prefix(&mut self) {
         self.cpu.register.write_u16(r1, reg_data);
     }
 
+    // Rotate, shift and bit operations
+    fn rla(&mut self) {
+        let carry_flag = self.cpu.flags.get_flag(Flag::C);
+        let reg_data = self.cpu.register.read_u8(RegisterU8::A);
+
+        let new_carry_flag: bool = (reg_data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let mut new_reg_data = reg_data << 1;
+        new_reg_data = new_reg_data & 0b1111_1110;
+
+        if carry_flag {
+            new_reg_data += 1;
+            self.cpu.register.write_u8(RegisterU8::A, new_reg_data);
+        }
+        else {
+            self.cpu.register.write_u8(RegisterU8::A, new_reg_data);
+        }
+
+        self.cpu.flags.set_flag(Flag::Z, false);
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
     // Control flow instructions
     fn jp_nn(&mut self) {
         let lsb = self.read_instruction(self.cpu.register.pc);
@@ -1658,32 +1692,6 @@ fn cb_prefix(&mut self) {
         }
     }
 
-    // Rotate instructions
-    fn rla(&mut self) {
-        let carry_flag = self.cpu.flags.get_flag(Flag::C);
-        let reg_data = self.cpu.register.read_u8(RegisterU8::A);
-
-        let new_carry_flag: bool = (reg_data & 0b1000_0000) != 0;
-        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
-
-        let mut new_reg_data = reg_data << 1;
-        new_reg_data = new_reg_data & 0b1111_1110;
-
-        if carry_flag {
-            new_reg_data += 1;
-            self.cpu.register.write_u8(RegisterU8::A, new_reg_data);
-        }
-        else {
-            self.cpu.register.write_u8(RegisterU8::A, new_reg_data);
-        }
-
-        self.cpu.flags.set_flag(Flag::Z, false);
-        self.cpu.flags.set_flag(Flag::N, false);
-        self.cpu.flags.set_flag(Flag::H, false);
-        self.cpu.register.update_f_reg(self.cpu.flags);
-    }
-
-
     // CB Prefix codes
     fn rl_r(&mut self, r1: RegisterU8) {
         let carry_flag = self.cpu.flags.get_flag(Flag::C);
@@ -1714,10 +1722,58 @@ fn cb_prefix(&mut self) {
         self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
+    fn rl_hl(&mut self) {
+        let carry_flag = self.cpu.flags.get_flag(Flag::C);
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+
+        let new_carry_flag: bool = (data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let mut new_data = data << 1;
+        new_data = new_data & 0b1111_1110;
+
+        if carry_flag {
+            new_data += 1;
+            self.write_instruction(address, new_data);
+        }
+        else {
+            self.write_instruction(address, new_data);
+        }
+
+        if new_data == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
 
     fn bit_r(&mut self, r1: RegisterU8, check_bit: u8) {
         let mask: u8 = 1;
         let mut data = self.cpu.register.read_u8(r1);
+        data = data >> check_bit;
+
+        if (data & mask) == 1 {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+
+        // Setting half carry flag and unsetting negative flag as per instruction
+        self.cpu.flags.set_flag(Flag::H, true);
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn bit_hl(&mut self, check_bit: u8) {
+        let mask: u8 = 1;
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let mut data = self.read_instruction(address);
         data = data >> check_bit;
 
         if (data & mask) == 1 {
@@ -1809,6 +1865,21 @@ mod tests {
 
         // Run test and compare output
         gameboy.ld_hl_r(r1);
+        let data_in_memory = gameboy.read_instruction(gameboy.cpu.register.read_u16(RegisterU16::HL));
+        assert_eq!(data_in_memory, 0x01);
+    }
+
+    #[test]
+    fn ld_hl_n() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u16(RegisterU16::HL, 0x1111);
+        gameboy.write_instruction(0x0, 0x01);
+
+        // Run test and compare output
+        gameboy.ld_hl_n();
         let data_in_memory = gameboy.read_instruction(gameboy.cpu.register.read_u16(RegisterU16::HL));
         assert_eq!(data_in_memory, 0x01);
     }
@@ -3090,6 +3161,23 @@ mod tests {
     }
 
     #[test]
+    fn rl_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.flags.set_flag(Flag::C, true);
+        gameboy.write_instruction(0x0, 0b1101_0010);
+
+        gameboy.rl_hl();
+        let new_r1 = gameboy.read_instruction(0x0);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0101);
+        assert_eq!(carry_flag, true);
+    }
+
+    #[test]
     fn bit_r() {
         // Create a gameboy for testing purposes
         let mut gameboy = Gameboy::new();
@@ -3100,6 +3188,22 @@ mod tests {
 
         // Run test and compare output
         gameboy.bit_r(r1, 6);
+
+        assert_eq!(gameboy.cpu.flags.get_flag(Flag::Z), true);
+        assert_eq!(gameboy.cpu.flags.get_flag(Flag::N), false);
+        assert_eq!(gameboy.cpu.flags.get_flag(Flag::H), true);
+    }
+
+    #[test]
+    fn bit_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0x9F);
+
+        // Run test and compare output
+        gameboy.bit_hl(6);
 
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::Z), true);
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::N), false);
