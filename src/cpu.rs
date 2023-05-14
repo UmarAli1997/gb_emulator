@@ -8,7 +8,8 @@ const CARRY_FLAG_BYTE_POSITION: u8 = 4;
 // Building CPU up
 pub struct CPU {
     pub register: Registers,
-    pub flags: FlagsRegister
+    pub flags: FlagsRegister,
+    pub ime: bool
 }
 
 // Initialising CPU with zero values
@@ -27,7 +28,8 @@ impl CPU {
                 pc: 0x0,
                 sp: 0x0,
             },
-            flags: FlagsRegister { z: false, n: false, h: false, c: false }
+            flags: FlagsRegister { z: false, n: false, h: false, c: false },
+            ime: false,
         };
         cpu
     }
