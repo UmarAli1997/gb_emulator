@@ -315,7 +315,7 @@ impl Gameboy {
             0xE5 => self.push(RegisterU16::HL),
             0xE6 => self.and_n(),
             0xE7 => self.rst_n(0x20),
-            0xE8 => todo!(),
+            0xE8 => self.add_sp_e(),
             0xE9 => self.jp_hl(),
             0xEA => self.ld_nn_a(),
             0xEB => panic!("Illegal Opcode: {:#X}", opcode),
@@ -333,7 +333,7 @@ impl Gameboy {
             0xF5 => self.push(RegisterU16::AF),
             0xF6 => self.or_n(),
             0xF7 => self.rst_n(0x30),
-            0xF8 => todo!(),
+            0xF8 => self.ld_hl_sp_e(),
             0xF9 => self.ld_sp_hl(),
             0xFA => self.ld_a_nn(),
             0xFB => todo!(),
@@ -1431,6 +1431,42 @@ fn cb_prefix(&mut self) {
         let reg_data = reg_data.wrapping_sub(0x01);
 
         self.cpu.register.write_u16(r1, reg_data);
+    }
+
+    fn add_sp_e(&mut self) {
+        let offset = self.read_instruction(self.cpu.register.pc) as i8;
+        self.cpu.register.pc += 1;
+        let new_sp = self.cpu.register.sp;
+
+        let half_carry_flag = self._half_carry_add_u16(new_sp, offset as u16);
+        let (new_sp, carry_flag) = new_sp.overflowing_add_signed(offset as i16);
+
+        self.cpu.register.sp = new_sp;
+
+        self.cpu.flags.set_flag(Flag::Z, false);
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    // Essentially the same as add_sp_e but saves the result to the HL register
+    // Not sure if there is a more elegant way than repeating code
+    fn ld_hl_sp_e(&mut self) {
+        let offset = self.read_instruction(self.cpu.register.pc) as i8;
+        self.cpu.register.pc += 1;
+        let new_sp = self.cpu.register.sp;
+
+        let half_carry_flag = self._half_carry_add_u16(new_sp, offset as u16);
+        let (new_sp, carry_flag) = new_sp.overflowing_add_signed(offset as i16);
+
+        self.cpu.register.write_u16(RegisterU16::HL, new_sp);
+
+        self.cpu.flags.set_flag(Flag::Z, false);
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, half_carry_flag);
+        self.cpu.flags.set_flag(Flag::C, carry_flag);
+        self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
     // Control flow instructions
@@ -3024,6 +3060,46 @@ mod tests {
         assert_eq!(reg_data, 0xFFFF);
     }
 
+    #[test]
+    fn add_sp_e() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0x1);
+        gameboy.cpu.register.sp = 0xFFFF;
+
+        // Run test and compare output
+        gameboy.add_sp_e();
+
+        let new_sp = gameboy.cpu.register.sp;
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+        let half_carry_flag = gameboy.cpu.flags.get_flag(Flag::H);
+        assert_eq!(new_sp, 0x0);
+        assert_eq!(carry_flag, true);
+        assert_eq!(half_carry_flag, true);
+    }
+
+    #[test]
+    fn ld_hl_sp_e() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0x1);
+        gameboy.cpu.register.sp = 0xFFFD;
+
+        // Run test and compare output
+        gameboy.ld_hl_sp_e();
+
+        let reg_hl = gameboy.cpu.register.read_u16(RegisterU16::HL);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+        let half_carry_flag = gameboy.cpu.flags.get_flag(Flag::H);
+        assert_eq!(reg_hl, 0xFFFE);
+        assert_eq!(carry_flag, false);
+        assert_eq!(half_carry_flag, false);
+    }
+
     // Control flow tests
     #[test]
     fn jp_nn() {
@@ -3034,10 +3110,10 @@ mod tests {
         gameboy.write_instruction(0x0, 0xFB);
         gameboy.write_instruction(0x1, 0xFA);
 
+        // Run test and compare output
         gameboy.jp_nn();
 
         let new_pc = gameboy.cpu.register.pc;
-
         assert_eq!(new_pc, 0xFAFB);
     }
 
