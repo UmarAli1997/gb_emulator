@@ -349,6 +349,24 @@ fn cb_prefix(&mut self) {
     self.cpu.register.pc += 1;
 
     match cb_code {
+        // 0x0 codes
+        0x00 => self.rlc_r(RegisterU8::B),
+        0x01 => self.rlc_r(RegisterU8::C),
+        0x02 => self.rlc_r(RegisterU8::D),
+        0x03 => self.rlc_r(RegisterU8::E),
+        0x04 => self.rlc_r(RegisterU8::H),
+        0x05 => self.rlc_r(RegisterU8::L),
+        0x06 => self.rlc_hl(),
+        0x07 => self.rlc_r(RegisterU8::A),
+        0x08 => todo!(),
+        0x09 => todo!(),
+        0x0A => todo!(),
+        0x0B => todo!(),
+        0x0C => todo!(),
+        0x0D => todo!(),
+        0x0E => todo!(),
+        0x0F => todo!(),
+
         // 0x1 codes
         0x10 => self.rl_r(RegisterU8::B),
         0x11 => self.rl_r(RegisterU8::C),
@@ -1788,6 +1806,49 @@ fn cb_prefix(&mut self) {
         self.cpu.register.write_u8(RegisterU8::A, rot_a);
 
         self.cpu.flags.set_flag(Flag::Z, false);
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn rlc_r(&mut self, r1: RegisterU8) {
+        let reg_data =  self.cpu.register.read_u8(r1);
+
+        let new_carry_flag: bool = (reg_data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let rot_data = reg_data.rotate_left(1);
+        self.cpu.register.write_u8(r1, rot_data);
+
+        if rot_data == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn rlc_hl(&mut self) {
+        let address =  self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+
+        let new_carry_flag: bool = (data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let rot_data = data.rotate_left(1);
+        self.write_instruction(address, rot_data);
+
+        if rot_data == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.flags.set_flag(Flag::H, false);
         self.cpu.register.update_f_reg(self.cpu.flags);
@@ -3358,6 +3419,42 @@ mod tests {
 
         assert_eq!(new_r1, 0b0110_1001);
         assert_eq!(carry_flag, false);
+    }
+
+    #[test]
+    fn rlc_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::B;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(r1, 0b1101_0010);
+
+        // Run test and compare output
+        gameboy.rlc_r(r1);
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0101);
+        assert_eq!(carry_flag, true);
+    }
+
+    #[test]
+    fn rlc_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.flags.set_flag(Flag::C, true);
+        gameboy.write_instruction(0x0, 0b1101_0010);
+
+        // Run test and compare output
+        gameboy.rlc_hl();
+        let new_r1 = gameboy.read_instruction(0x0);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0101);
+        assert_eq!(carry_flag, true);
     }
 
     #[test]
