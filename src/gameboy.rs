@@ -382,8 +382,44 @@ fn cb_prefix(&mut self) {
         0x1B => self.rr_r(RegisterU8::E),
         0x1C => self.rr_r(RegisterU8::H),
         0x1D => self.rr_r(RegisterU8::L),
-        0x1E => todo!(),
+        0x1E => self.rr_hl(),
         0x1F => self.rr_r(RegisterU8::A),
+
+        // 0x2 codes
+        0x20 => self.sla_r(RegisterU8::B),
+        0x21 => self.sla_r(RegisterU8::C),
+        0x22 => self.sla_r(RegisterU8::D),
+        0x23 => self.sla_r(RegisterU8::E),
+        0x24 => self.sla_r(RegisterU8::H),
+        0x25 => self.sla_r(RegisterU8::L),
+        0x26 => self.sla_hl(),
+        0x27 => self.sla_r(RegisterU8::A),
+        0x28 => todo!(),
+        0x29 => todo!(),
+        0x2A => todo!(),
+        0x2B => todo!(),
+        0x2C => todo!(),
+        0x2D => todo!(),
+        0x2E => todo!(),
+        0x2F => todo!(),
+
+        // 0x3 codes
+        0x30 => todo!(),
+        0x31 => todo!(),
+        0x32 => todo!(),
+        0x33 => todo!(),
+        0x34 => todo!(),
+        0x35 => todo!(),
+        0x36 => todo!(),
+        0x37 => todo!(),
+        0x38 => todo!(),
+        0x39 => todo!(),
+        0x3A => todo!(),
+        0x3B => todo!(),
+        0x3C => todo!(),
+        0x3D => todo!(),
+        0x3E => todo!(),
+        0x3F => todo!(),
 
         // 0x4 codes
         0x40 => self.bit_r(RegisterU8::B, 0),
@@ -457,7 +493,149 @@ fn cb_prefix(&mut self) {
         0x7E => self.bit_hl(7),
         0x7F => self.bit_r(RegisterU8::A, 7),
 
-        _ => panic!("CB Prefixed code not implemented: {:#X}", cb_code)
+        // 0x8 codes
+        0x80 => todo!(),
+        0x81 => todo!(),
+        0x82 => todo!(),
+        0x83 => todo!(),
+        0x84 => todo!(),
+        0x85 => todo!(),
+        0x86 => todo!(),
+        0x87 => todo!(),
+        0x88 => todo!(),
+        0x89 => todo!(),
+        0x8A => todo!(),
+        0x8B => todo!(),
+        0x8C => todo!(),
+        0x8D => todo!(),
+        0x8E => todo!(),
+        0x8F => todo!(),
+
+        // 0x9 codes
+        0x90 => todo!(),
+        0x91 => todo!(),
+        0x92 => todo!(),
+        0x93 => todo!(),
+        0x94 => todo!(),
+        0x95 => todo!(),
+        0x96 => todo!(),
+        0x97 => todo!(),
+        0x98 => todo!(),
+        0x99 => todo!(),
+        0x9A => todo!(),
+        0x9B => todo!(),
+        0x9C => todo!(),
+        0x9D => todo!(),
+        0x9E => todo!(),
+        0x9F => todo!(),
+
+        // 0xA codes
+        0xA0 => todo!(),
+        0xA1 => todo!(),
+        0xA2 => todo!(),
+        0xA3 => todo!(),
+        0xA4 => todo!(),
+        0xA5 => todo!(),
+        0xA6 => todo!(),
+        0xA7 => todo!(),
+        0xA8 => todo!(),
+        0xA9 => todo!(),
+        0xAA => todo!(),
+        0xAB => todo!(),
+        0xAC => todo!(),
+        0xAD => todo!(),
+        0xAE => todo!(),
+        0xAF => todo!(),
+
+        // 0xB codes
+        0xB0 => todo!(),
+        0xB1 => todo!(),
+        0xB2 => todo!(),
+        0xB3 => todo!(),
+        0xB4 => todo!(),
+        0xB5 => todo!(),
+        0xB6 => todo!(),
+        0xB7 => todo!(),
+        0xB8 => todo!(),
+        0xB9 => todo!(),
+        0xBA => todo!(),
+        0xBB => todo!(),
+        0xBC => todo!(),
+        0xBD => todo!(),
+        0xBE => todo!(),
+        0xBF => todo!(),
+
+        // 0xC codes
+        0xC0 => todo!(),
+        0xC1 => todo!(),
+        0xC2 => todo!(),
+        0xC3 => todo!(),
+        0xC4 => todo!(),
+        0xC5 => todo!(),
+        0xC6 => todo!(),
+        0xC7 => todo!(),
+        0xC8 => todo!(),
+        0xC9 => todo!(),
+        0xCA => todo!(),
+        0xCB => todo!(),
+        0xCC => todo!(),
+        0xCD => todo!(),
+        0xCE => todo!(),
+        0xCF => todo!(),
+
+        // 0xD codes
+        0xD0 => todo!(),
+        0xD1 => todo!(),
+        0xD2 => todo!(),
+        0xD3 => todo!(),
+        0xD4 => todo!(),
+        0xD5 => todo!(),
+        0xD6 => todo!(),
+        0xD7 => todo!(),
+        0xD8 => todo!(),
+        0xD9 => todo!(),
+        0xDA => todo!(),
+        0xDB => todo!(),
+        0xDC => todo!(),
+        0xDD => todo!(),
+        0xDE => todo!(),
+        0xDF => todo!(),
+
+        // 0xE codes
+        0xE0 => todo!(),
+        0xE1 => todo!(),
+        0xE2 => todo!(),
+        0xE3 => todo!(),
+        0xE4 => todo!(),
+        0xE5 => todo!(),
+        0xE6 => todo!(),
+        0xE7 => todo!(),
+        0xE8 => todo!(),
+        0xE9 => todo!(),
+        0xEA => todo!(),
+        0xEB => todo!(),
+        0xEC => todo!(),
+        0xED => todo!(),
+        0xEE => todo!(),
+        0xEF => todo!(),
+
+        // 0xF codes
+        0xF0 => todo!(),
+        0xF1 => todo!(),
+        0xF2 => todo!(),
+        0xF3 => todo!(),
+        0xF4 => todo!(),
+        0xF5 => todo!(),
+        0xF6 => todo!(),
+        0xF7 => todo!(),
+        0xF8 => todo!(),
+        0xF9 => todo!(),
+        0xFA => todo!(),
+        0xFB => todo!(),
+        0xFC => todo!(),
+        0xFD => todo!(),
+        0xFE => todo!(),
+        0xFF => todo!()
     }
 }
 
@@ -2007,6 +2185,51 @@ fn cb_prefix(&mut self) {
         }
 
         if new_data == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn sla_r(&mut self, r1: RegisterU8) {
+        let reg_data = self.cpu.register.read_u8(r1);
+
+        let new_carry_flag: bool = (reg_data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let shifted_reg_data = reg_data << 1;
+
+        self.cpu.register.write_u8(r1, shifted_reg_data);
+
+        if shifted_reg_data == 0 {
+            self.cpu.flags.set_flag(Flag::Z, true);
+        }
+        else {
+            self.cpu.flags.set_flag(Flag::Z, false);
+        }
+
+        self.cpu.flags.set_flag(Flag::N, false);
+        self.cpu.flags.set_flag(Flag::H, false);
+        self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn sla_hl(&mut self) {
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let data = self.read_instruction(address);
+
+        let new_carry_flag: bool = (data & 0b1000_0000) != 0;
+        self.cpu.flags.set_flag(Flag::C, new_carry_flag);
+
+        let shifted_reg_data = data << 1;
+
+        self.write_instruction(address, shifted_reg_data);
+
+        if shifted_reg_data == 0 {
             self.cpu.flags.set_flag(Flag::Z, true);
         }
         else {
@@ -3670,6 +3893,43 @@ mod tests {
 
         assert_eq!(new_r1, 0b1110_1001);
         assert_eq!(carry_flag, false);
+    }
+
+    #[test]
+    fn sla_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::B;
+
+        // Set up gameboy state for test
+        gameboy.cpu.flags.set_flag(Flag::C, true);
+        gameboy.cpu.register.write_u8(r1, 0b1101_0010);
+
+        // Run test and compare output
+        gameboy.sla_r(r1);
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0100);
+        assert_eq!(carry_flag, true);
+    }
+
+    #[test]
+    fn sla_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.cpu.flags.set_flag(Flag::C, true);
+        gameboy.write_instruction(0x0, 0b1101_0010);
+
+        // Run test and compare output
+        gameboy.sla_hl();
+        let new_r1 = gameboy.read_instruction(0x0);
+        let carry_flag = gameboy.cpu.flags.get_flag(Flag::C);
+
+        assert_eq!(new_r1, 0b1010_0100);
+        assert_eq!(carry_flag, true);
     }
 
     #[test]
