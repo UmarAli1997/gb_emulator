@@ -410,7 +410,7 @@ fn cb_prefix(&mut self) {
         0x33 => self.swap_r(RegisterU8::E),
         0x34 => self.swap_r(RegisterU8::H),
         0x35 => self.swap_r(RegisterU8::L),
-        0x36 => todo!(),
+        0x36 => self.swap_hl(),
         0x37 => self.swap_r(RegisterU8::A),
         0x38 => self.srl_r(RegisterU8::B),
         0x39 => self.srl_r(RegisterU8::C),
@@ -422,148 +422,148 @@ fn cb_prefix(&mut self) {
         0x3F => self.srl_r(RegisterU8::A),
 
         // 0x4 codes
-        0x40 => self.bit_r(RegisterU8::B, 0),
-        0x41 => self.bit_r(RegisterU8::C, 0),
-        0x42 => self.bit_r(RegisterU8::D, 0),
-        0x43 => self.bit_r(RegisterU8::E, 0),
-        0x44 => self.bit_r(RegisterU8::H, 0),
-        0x45 => self.bit_r(RegisterU8::L, 0),
+        0x40 => self.bit_r(0, RegisterU8::B),
+        0x41 => self.bit_r(0, RegisterU8::C),
+        0x42 => self.bit_r(0, RegisterU8::D),
+        0x43 => self.bit_r(0, RegisterU8::E),
+        0x44 => self.bit_r(0, RegisterU8::H),
+        0x45 => self.bit_r(0, RegisterU8::L),
         0x46 => self.bit_hl(0),
-        0x47 => self.bit_r(RegisterU8::A, 0),
-        0x48 => self.bit_r(RegisterU8::B, 1),
-        0x49 => self.bit_r(RegisterU8::C, 1),
-        0x4A => self.bit_r(RegisterU8::D, 1),
-        0x4B => self.bit_r(RegisterU8::E, 1),
-        0x4C => self.bit_r(RegisterU8::H, 1),
-        0x4D => self.bit_r(RegisterU8::L, 1),
+        0x47 => self.bit_r(0, RegisterU8::A),
+        0x48 => self.bit_r(1, RegisterU8::B),
+        0x49 => self.bit_r(1, RegisterU8::C),
+        0x4A => self.bit_r(1, RegisterU8::D),
+        0x4B => self.bit_r(1, RegisterU8::E),
+        0x4C => self.bit_r(1, RegisterU8::H),
+        0x4D => self.bit_r(1, RegisterU8::L),
         0x4E => self.bit_hl(1),
-        0x4F => self.bit_r(RegisterU8::A, 1),
+        0x4F => self.bit_r(1, RegisterU8::A),
 
         // 0x5 codes
-        0x50 => self.bit_r(RegisterU8::B, 2),
-        0x51 => self.bit_r(RegisterU8::C, 2),
-        0x52 => self.bit_r(RegisterU8::D, 2),
-        0x53 => self.bit_r(RegisterU8::E, 2),
-        0x54 => self.bit_r(RegisterU8::H, 2),
-        0x55 => self.bit_r(RegisterU8::L, 2),
+        0x50 => self.bit_r(2, RegisterU8::B),
+        0x51 => self.bit_r(2, RegisterU8::C),
+        0x52 => self.bit_r(2, RegisterU8::D),
+        0x53 => self.bit_r(2, RegisterU8::E),
+        0x54 => self.bit_r(2, RegisterU8::H),
+        0x55 => self.bit_r(2, RegisterU8::L),
         0x56 => self.bit_hl(2),
-        0x57 => self.bit_r(RegisterU8::A, 2),
-        0x58 => self.bit_r(RegisterU8::B, 3),
-        0x59 => self.bit_r(RegisterU8::C, 3),
-        0x5A => self.bit_r(RegisterU8::D, 3),
-        0x5B => self.bit_r(RegisterU8::E, 3),
-        0x5C => self.bit_r(RegisterU8::H, 3),
-        0x5D => self.bit_r(RegisterU8::L, 3),
+        0x57 => self.bit_r(2, RegisterU8::A),
+        0x58 => self.bit_r(3, RegisterU8::B),
+        0x59 => self.bit_r(3, RegisterU8::C),
+        0x5A => self.bit_r(3, RegisterU8::D),
+        0x5B => self.bit_r(3, RegisterU8::E),
+        0x5C => self.bit_r(3, RegisterU8::H),
+        0x5D => self.bit_r(3, RegisterU8::L),
         0x5E => self.bit_hl(3),
-        0x5F => self.bit_r(RegisterU8::A, 3),
+        0x5F => self.bit_r(3, RegisterU8::A),
 
         // 0x6 codes
-        0x60 => self.bit_r(RegisterU8::B, 4),
-        0x61 => self.bit_r(RegisterU8::C, 4),
-        0x62 => self.bit_r(RegisterU8::D, 4),
-        0x63 => self.bit_r(RegisterU8::E, 4),
-        0x64 => self.bit_r(RegisterU8::H, 4),
-        0x65 => self.bit_r(RegisterU8::L, 4),
+        0x60 => self.bit_r(4, RegisterU8::B),
+        0x61 => self.bit_r(4, RegisterU8::C),
+        0x62 => self.bit_r(4, RegisterU8::D),
+        0x63 => self.bit_r(4, RegisterU8::E),
+        0x64 => self.bit_r(4, RegisterU8::H),
+        0x65 => self.bit_r(4, RegisterU8::L),
         0x66 => self.bit_hl(4),
-        0x67 => self.bit_r(RegisterU8::A, 6),
-        0x68 => self.bit_r(RegisterU8::B, 5),
-        0x69 => self.bit_r(RegisterU8::C, 5),
-        0x6A => self.bit_r(RegisterU8::D, 5),
-        0x6B => self.bit_r(RegisterU8::E, 5),
-        0x6C => self.bit_r(RegisterU8::H, 5),
-        0x6D => self.bit_r(RegisterU8::L, 5),
+        0x67 => self.bit_r(6, RegisterU8::A),
+        0x68 => self.bit_r(5, RegisterU8::B),
+        0x69 => self.bit_r(5, RegisterU8::C),
+        0x6A => self.bit_r(5, RegisterU8::D),
+        0x6B => self.bit_r(5, RegisterU8::E),
+        0x6C => self.bit_r(5, RegisterU8::H),
+        0x6D => self.bit_r(5, RegisterU8::L),
         0x6E => self.bit_hl(5),
-        0x6F => self.bit_r(RegisterU8::A, 5),
+        0x6F => self.bit_r(5, RegisterU8::A),
 
         // 0x7 codes
-        0x70 => self.bit_r(RegisterU8::B, 6),
-        0x71 => self.bit_r(RegisterU8::C, 6),
-        0x72 => self.bit_r(RegisterU8::D, 6),
-        0x73 => self.bit_r(RegisterU8::E, 6),
-        0x74 => self.bit_r(RegisterU8::H, 6),
-        0x75 => self.bit_r(RegisterU8::L, 6),
+        0x70 => self.bit_r(6, RegisterU8::B),
+        0x71 => self.bit_r(6, RegisterU8::C),
+        0x72 => self.bit_r(6, RegisterU8::D),
+        0x73 => self.bit_r(6, RegisterU8::E),
+        0x74 => self.bit_r(6, RegisterU8::H),
+        0x75 => self.bit_r(6, RegisterU8::L),
         0x76 => self.bit_hl(6),
-        0x77 => self.bit_r(RegisterU8::A, 6),
-        0x78 => self.bit_r(RegisterU8::B, 7),
-        0x79 => self.bit_r(RegisterU8::C, 7),
-        0x7A => self.bit_r(RegisterU8::D, 7),
-        0x7B => self.bit_r(RegisterU8::E, 7),
-        0x7C => self.bit_r(RegisterU8::H, 7),
-        0x7D => self.bit_r(RegisterU8::L, 7),
+        0x77 => self.bit_r(6, RegisterU8::A),
+        0x78 => self.bit_r(7, RegisterU8::B),
+        0x79 => self.bit_r(7, RegisterU8::C),
+        0x7A => self.bit_r(7, RegisterU8::D),
+        0x7B => self.bit_r(7, RegisterU8::E),
+        0x7C => self.bit_r(7, RegisterU8::H),
+        0x7D => self.bit_r(7, RegisterU8::L),
         0x7E => self.bit_hl(7),
-        0x7F => self.bit_r(RegisterU8::A, 7),
+        0x7F => self.bit_r(7, RegisterU8::A),
 
         // 0x8 codes
-        0x80 => todo!(),
-        0x81 => todo!(),
-        0x82 => todo!(),
-        0x83 => todo!(),
-        0x84 => todo!(),
-        0x85 => todo!(),
-        0x86 => todo!(),
-        0x87 => todo!(),
-        0x88 => todo!(),
-        0x89 => todo!(),
-        0x8A => todo!(),
-        0x8B => todo!(),
-        0x8C => todo!(),
-        0x8D => todo!(),
-        0x8E => todo!(),
-        0x8F => todo!(),
+        0x80 => self.res_r(0, RegisterU8::B),
+        0x81 => self.res_r(0, RegisterU8::C),
+        0x82 => self.res_r(0, RegisterU8::D),
+        0x83 => self.res_r(0, RegisterU8::E),
+        0x84 => self.res_r(0, RegisterU8::H),
+        0x85 => self.res_r(0, RegisterU8::L),
+        0x86 => self.res_hl(0),
+        0x87 => self.res_r(0, RegisterU8::A),
+        0x88 => self.res_r(1, RegisterU8::B),
+        0x89 => self.res_r(1, RegisterU8::C),
+        0x8A => self.res_r(1, RegisterU8::D),
+        0x8B => self.res_r(1, RegisterU8::E),
+        0x8C => self.res_r(1, RegisterU8::H),
+        0x8D => self.res_r(1, RegisterU8::L),
+        0x8E => self.res_hl(1),
+        0x8F => self.res_r(1, RegisterU8::A),
 
         // 0x9 codes
-        0x90 => todo!(),
-        0x91 => todo!(),
-        0x92 => todo!(),
-        0x93 => todo!(),
-        0x94 => todo!(),
-        0x95 => todo!(),
-        0x96 => todo!(),
-        0x97 => todo!(),
-        0x98 => todo!(),
-        0x99 => todo!(),
-        0x9A => todo!(),
-        0x9B => todo!(),
-        0x9C => todo!(),
-        0x9D => todo!(),
-        0x9E => todo!(),
-        0x9F => todo!(),
+        0x90 => self.res_r(2, RegisterU8::B),
+        0x91 => self.res_r(2, RegisterU8::C),
+        0x92 => self.res_r(2, RegisterU8::D),
+        0x93 => self.res_r(2, RegisterU8::E),
+        0x94 => self.res_r(2, RegisterU8::H),
+        0x95 => self.res_r(2, RegisterU8::L),
+        0x96 => self.res_hl(2),
+        0x97 => self.res_r(2, RegisterU8::A),
+        0x98 => self.res_r(3, RegisterU8::B),
+        0x99 => self.res_r(3, RegisterU8::C),
+        0x9A => self.res_r(3, RegisterU8::D),
+        0x9B => self.res_r(3, RegisterU8::E),
+        0x9C => self.res_r(3, RegisterU8::H),
+        0x9D => self.res_r(3, RegisterU8::L),
+        0x9E => self.res_hl(3),
+        0x9F => self.res_r(3, RegisterU8::A),
 
         // 0xA codes
-        0xA0 => todo!(),
-        0xA1 => todo!(),
-        0xA2 => todo!(),
-        0xA3 => todo!(),
-        0xA4 => todo!(),
-        0xA5 => todo!(),
-        0xA6 => todo!(),
-        0xA7 => todo!(),
-        0xA8 => todo!(),
-        0xA9 => todo!(),
-        0xAA => todo!(),
-        0xAB => todo!(),
-        0xAC => todo!(),
-        0xAD => todo!(),
-        0xAE => todo!(),
-        0xAF => todo!(),
+        0xA0 => self.res_r(4, RegisterU8::B),
+        0xA1 => self.res_r(4, RegisterU8::C),
+        0xA2 => self.res_r(4, RegisterU8::D),
+        0xA3 => self.res_r(4, RegisterU8::E),
+        0xA4 => self.res_r(4, RegisterU8::H),
+        0xA5 => self.res_r(4, RegisterU8::L),
+        0xA6 => self.res_hl(4),
+        0xA7 => self.res_r(4, RegisterU8::A),
+        0xA8 => self.res_r(5, RegisterU8::B),
+        0xA9 => self.res_r(5, RegisterU8::C),
+        0xAA => self.res_r(5, RegisterU8::D),
+        0xAB => self.res_r(5, RegisterU8::E),
+        0xAC => self.res_r(5, RegisterU8::H),
+        0xAD => self.res_r(5, RegisterU8::L),
+        0xAE => self.res_hl(5),
+        0xAF => self.res_r(5, RegisterU8::A),
 
         // 0xB codes
-        0xB0 => todo!(),
-        0xB1 => todo!(),
-        0xB2 => todo!(),
-        0xB3 => todo!(),
-        0xB4 => todo!(),
-        0xB5 => todo!(),
-        0xB6 => todo!(),
-        0xB7 => todo!(),
-        0xB8 => todo!(),
-        0xB9 => todo!(),
-        0xBA => todo!(),
-        0xBB => todo!(),
-        0xBC => todo!(),
-        0xBD => todo!(),
-        0xBE => todo!(),
-        0xBF => todo!(),
+        0xB0 => self.res_r(6, RegisterU8::B),
+        0xB1 => self.res_r(6, RegisterU8::C),
+        0xB2 => self.res_r(6, RegisterU8::D),
+        0xB3 => self.res_r(6, RegisterU8::E),
+        0xB4 => self.res_r(6, RegisterU8::H),
+        0xB5 => self.res_r(6, RegisterU8::L),
+        0xB6 => self.res_hl(6),
+        0xB7 => self.res_r(6, RegisterU8::A),
+        0xB8 => self.res_r(7, RegisterU8::B),
+        0xB9 => self.res_r(7, RegisterU8::C),
+        0xBA => self.res_r(7, RegisterU8::D),
+        0xBB => self.res_r(7, RegisterU8::E),
+        0xBC => self.res_r(7, RegisterU8::H),
+        0xBD => self.res_r(7, RegisterU8::L),
+        0xBE => self.res_hl(7),
+        0xBF => self.res_r(7, RegisterU8::A),
 
         // 0xC codes
         0xC0 => todo!(),
@@ -2382,7 +2382,7 @@ fn cb_prefix(&mut self) {
         self.cpu.register.update_f_reg(self.cpu.flags);
     }
 
-    fn bit_r(&mut self, r1: RegisterU8, check_bit: u8) {
+    fn bit_r(&mut self, check_bit: u8, r1: RegisterU8) {
         let mask: u8 = 1;
         let mut data = self.cpu.register.read_u8(r1);
         data = data >> check_bit;
@@ -2417,6 +2417,23 @@ fn cb_prefix(&mut self) {
         self.cpu.flags.set_flag(Flag::H, true);
         self.cpu.flags.set_flag(Flag::N, false);
         self.cpu.register.update_f_reg(self.cpu.flags);
+    }
+
+    fn res_r(&mut self, reset_bit: u8, r1: RegisterU8) {
+        let mask: u8 = 1;
+        let mut data = self.cpu.register.read_u8(r1);
+
+        data = data & !(mask << reset_bit);
+        self.cpu.register.write_u8(r1, data);
+    }
+
+    fn res_hl(&mut self, reset_bit: u8) {
+        let mask: u8 = 1;
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let mut data = self.read_instruction(address);
+
+        data = data & !(mask << reset_bit);
+        self.write_instruction(address, data);
     }
 }
 
@@ -4192,7 +4209,7 @@ mod tests {
         gameboy.cpu.register.write_u8(r1, 0x9F);
 
         // Run test and compare output
-        gameboy.bit_r(r1, 6);
+        gameboy.bit_r(6, r1);
 
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::Z), true);
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::N), false);
@@ -4213,6 +4230,37 @@ mod tests {
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::Z), true);
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::N), false);
         assert_eq!(gameboy.cpu.flags.get_flag(Flag::H), true);
+    }
+
+    #[test]
+    fn res_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::A;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(r1, 0b0101_1010);
+
+        // Run test and compare output
+        gameboy.res_r(3, r1);
+
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        assert_eq!(new_r1, 0b0101_0010);
+    }
+
+    #[test]
+    fn res_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0b0101_1010);
+
+        // Run test and compare output
+        gameboy.res_hl(3);
+
+        let new_r1 = gameboy.read_instruction(0x0);
+        assert_eq!(new_r1, 0b0101_0010);
     }
 
 }
