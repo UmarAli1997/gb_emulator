@@ -566,76 +566,76 @@ fn cb_prefix(&mut self) {
         0xBF => self.res_r(7, RegisterU8::A),
 
         // 0xC codes
-        0xC0 => todo!(),
-        0xC1 => todo!(),
-        0xC2 => todo!(),
-        0xC3 => todo!(),
-        0xC4 => todo!(),
-        0xC5 => todo!(),
-        0xC6 => todo!(),
-        0xC7 => todo!(),
-        0xC8 => todo!(),
-        0xC9 => todo!(),
-        0xCA => todo!(),
-        0xCB => todo!(),
-        0xCC => todo!(),
-        0xCD => todo!(),
-        0xCE => todo!(),
-        0xCF => todo!(),
+        0xC0 => self.set_r(0, RegisterU8::B),
+        0xC1 => self.set_r(0, RegisterU8::C),
+        0xC2 => self.set_r(0, RegisterU8::D),
+        0xC3 => self.set_r(0, RegisterU8::E),
+        0xC4 => self.set_r(0, RegisterU8::H),
+        0xC5 => self.set_r(0, RegisterU8::L),
+        0xC6 => self.set_hl(0),
+        0xC7 => self.set_r(0, RegisterU8::A),
+        0xC8 => self.set_r(1, RegisterU8::B),
+        0xC9 => self.set_r(1, RegisterU8::C),
+        0xCA => self.set_r(1, RegisterU8::D),
+        0xCB => self.set_r(1, RegisterU8::E),
+        0xCC => self.set_r(1, RegisterU8::H),
+        0xCD => self.set_r(1, RegisterU8::L),
+        0xCE => self.set_hl(1),
+        0xCF => self.set_r(1, RegisterU8::A),
 
         // 0xD codes
-        0xD0 => todo!(),
-        0xD1 => todo!(),
-        0xD2 => todo!(),
-        0xD3 => todo!(),
-        0xD4 => todo!(),
-        0xD5 => todo!(),
-        0xD6 => todo!(),
-        0xD7 => todo!(),
-        0xD8 => todo!(),
-        0xD9 => todo!(),
-        0xDA => todo!(),
-        0xDB => todo!(),
-        0xDC => todo!(),
-        0xDD => todo!(),
-        0xDE => todo!(),
-        0xDF => todo!(),
+        0xD0 => self.set_r(2, RegisterU8::B),
+        0xD1 => self.set_r(2, RegisterU8::C),
+        0xD2 => self.set_r(2, RegisterU8::D),
+        0xD3 => self.set_r(2, RegisterU8::E),
+        0xD4 => self.set_r(2, RegisterU8::H),
+        0xD5 => self.set_r(2, RegisterU8::L),
+        0xD6 => self.set_hl(2),
+        0xD7 => self.set_r(2, RegisterU8::A),
+        0xD8 => self.set_r(3, RegisterU8::B),
+        0xD9 => self.set_r(3, RegisterU8::C),
+        0xDA => self.set_r(3, RegisterU8::D),
+        0xDB => self.set_r(3, RegisterU8::E),
+        0xDC => self.set_r(3, RegisterU8::H),
+        0xDD => self.set_r(3, RegisterU8::L),
+        0xDE => self.set_hl(3),
+        0xDF => self.set_r(3, RegisterU8::A),
 
         // 0xE codes
-        0xE0 => todo!(),
-        0xE1 => todo!(),
-        0xE2 => todo!(),
-        0xE3 => todo!(),
-        0xE4 => todo!(),
-        0xE5 => todo!(),
-        0xE6 => todo!(),
-        0xE7 => todo!(),
-        0xE8 => todo!(),
-        0xE9 => todo!(),
-        0xEA => todo!(),
-        0xEB => todo!(),
-        0xEC => todo!(),
-        0xED => todo!(),
-        0xEE => todo!(),
-        0xEF => todo!(),
+        0xE0 => self.set_r(4, RegisterU8::B),
+        0xE1 => self.set_r(4, RegisterU8::C),
+        0xE2 => self.set_r(4, RegisterU8::D),
+        0xE3 => self.set_r(4, RegisterU8::E),
+        0xE4 => self.set_r(4, RegisterU8::H),
+        0xE5 => self.set_r(4, RegisterU8::L),
+        0xE6 => self.set_hl(4),
+        0xE7 => self.set_r(4, RegisterU8::A),
+        0xE8 => self.set_r(5, RegisterU8::B),
+        0xE9 => self.set_r(5, RegisterU8::C),
+        0xEA => self.set_r(5, RegisterU8::D),
+        0xEB => self.set_r(5, RegisterU8::E),
+        0xEC => self.set_r(5, RegisterU8::H),
+        0xED => self.set_r(5, RegisterU8::L),
+        0xEE => self.set_hl(5),
+        0xEF => self.set_r(5, RegisterU8::A),
 
         // 0xF codes
-        0xF0 => todo!(),
-        0xF1 => todo!(),
-        0xF2 => todo!(),
-        0xF3 => todo!(),
-        0xF4 => todo!(),
-        0xF5 => todo!(),
-        0xF6 => todo!(),
-        0xF7 => todo!(),
-        0xF8 => todo!(),
-        0xF9 => todo!(),
-        0xFA => todo!(),
-        0xFB => todo!(),
-        0xFC => todo!(),
-        0xFD => todo!(),
-        0xFE => todo!(),
-        0xFF => todo!()
+        0xF0 => self.set_r(6, RegisterU8::B),
+        0xF1 => self.set_r(6, RegisterU8::C),
+        0xF2 => self.set_r(6, RegisterU8::D),
+        0xF3 => self.set_r(6, RegisterU8::E),
+        0xF4 => self.set_r(6, RegisterU8::H),
+        0xF5 => self.set_r(6, RegisterU8::L),
+        0xF6 => self.set_hl(6),
+        0xF7 => self.set_r(6, RegisterU8::A),
+        0xF8 => self.set_r(7, RegisterU8::B),
+        0xF9 => self.set_r(7, RegisterU8::C),
+        0xFA => self.set_r(7, RegisterU8::D),
+        0xFB => self.set_r(7, RegisterU8::E),
+        0xFC => self.set_r(7, RegisterU8::H),
+        0xFD => self.set_r(7, RegisterU8::L),
+        0xFE => self.set_hl(7),
+        0xFF => self.set_r(7, RegisterU8::A),
     }
 }
 
@@ -2384,10 +2384,10 @@ fn cb_prefix(&mut self) {
 
     fn bit_r(&mut self, check_bit: u8, r1: RegisterU8) {
         let mask: u8 = 1;
-        let mut data = self.cpu.register.read_u8(r1);
-        data = data >> check_bit;
+        let mut reg_data = self.cpu.register.read_u8(r1);
+        reg_data = reg_data >> check_bit;
 
-        if (data & mask) == 1 {
+        if (reg_data & mask) == 1 {
             self.cpu.flags.set_flag(Flag::Z, false);
         }
         else {
@@ -2421,10 +2421,10 @@ fn cb_prefix(&mut self) {
 
     fn res_r(&mut self, reset_bit: u8, r1: RegisterU8) {
         let mask: u8 = 1;
-        let mut data = self.cpu.register.read_u8(r1);
+        let mut reg_data = self.cpu.register.read_u8(r1);
 
-        data = data & !(mask << reset_bit);
-        self.cpu.register.write_u8(r1, data);
+        reg_data = reg_data & !(mask << reset_bit);
+        self.cpu.register.write_u8(r1, reg_data);
     }
 
     fn res_hl(&mut self, reset_bit: u8) {
@@ -2433,6 +2433,23 @@ fn cb_prefix(&mut self) {
         let mut data = self.read_instruction(address);
 
         data = data & !(mask << reset_bit);
+        self.write_instruction(address, data);
+    }
+
+    fn set_r(&mut self, set_bit: u8, r1: RegisterU8) {
+        let mask: u8 = 1;
+        let mut reg_data = self.cpu.register.read_u8(r1);
+
+        reg_data = reg_data | (mask << set_bit);
+        self.cpu.register.write_u8(r1, reg_data);
+    }
+
+    fn set_hl(&mut self, set_bit: u8) {
+        let mask: u8 = 1;
+        let address = self.cpu.register.read_u16(RegisterU16::HL);
+        let mut data = self.read_instruction(address);
+
+        data = data | (mask << set_bit);
         self.write_instruction(address, data);
     }
 }
@@ -4261,6 +4278,37 @@ mod tests {
 
         let new_r1 = gameboy.read_instruction(0x0);
         assert_eq!(new_r1, 0b0101_0010);
+    }
+
+    #[test]
+    fn set_r() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+        let r1 = RegisterU8::B;
+
+        // Set up gameboy state for test
+        gameboy.cpu.register.write_u8(r1, 0b0101_1010);
+
+        // Run test and compare output
+        gameboy.set_r(7, r1);
+
+        let new_r1 = gameboy.cpu.register.read_u8(r1);
+        assert_eq!(new_r1, 0b1101_1010);
+    }
+
+    #[test]
+    fn set_hl() {
+        // Create a gameboy for testing purposes
+        let mut gameboy = Gameboy::new();
+
+        // Set up gameboy state for test
+        gameboy.write_instruction(0x0, 0b0101_1010);
+
+        // Run test and compare output
+        gameboy.set_hl(7);
+
+        let new_r1 = gameboy.read_instruction(0x0);
+        assert_eq!(new_r1, 0b1101_1010);
     }
 
 }
