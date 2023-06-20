@@ -99,6 +99,25 @@ pub enum FlagConds {
     C
 }
 
+#[derive(Copy, Clone)]
+pub enum InterruptConds {
+    Enabled,
+    Disabled
+}
+
+impl CPU {
+    pub fn get_ime_state(&self) -> bool {
+        return self.ime;
+    }
+
+    pub fn set_ime_state(&mut self, interrupt_condition: InterruptConds) {
+        match interrupt_condition {
+            InterruptConds::Enabled => self.ime = true,
+            InterruptConds::Disabled => self.ime = false
+        }
+    }
+}
+
 // If the register needs to be accessed as a u8 this will convert the bool in the struct to a u8
 impl From<FlagsRegister> for u8  {
     fn from(flag: FlagsRegister) -> u8 {
@@ -128,7 +147,6 @@ impl FlagsRegister {
         }
     }
 }
-
 
 impl Registers {
     pub fn read_u8(&self, reg: RegisterU8) -> u8 {
