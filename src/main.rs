@@ -1,5 +1,8 @@
+use std::io::{stdout, Write};
 use std::path::Path;
 use std::fs;
+use std::thread::sleep;
+use std::time::Duration;
 
 mod mmu;
 mod cpu;
@@ -17,7 +20,7 @@ fn main() {
     let cart_path = Path::new("./BOOT/Tetris (World) (Rev 1).gb");
     let cart = fs::read(cart_path).expect("File not found!");
 
-    let test_path = Path::new("./TEST/09-op r,r.gb");
+    let test_path = Path::new("./TEST/cpu_instr/03-op sp,hl.gb");
     let test = fs::read(test_path).expect("File not found!");
 
     //gameboy.memory.copy_to_ram(0, &cart);
@@ -35,11 +38,19 @@ fn main() {
     //     println!("{:#X}: {}", i, item);
     // }
 
-    let mut counter = 1;
+    // let mut counter = 1;
     loop {
-        println!("{}", counter);
+        if gameboy.memory.ram[0xFF02] == 0x81 {
+            let c = gameboy.memory.ram[0xFF01];
+            print!("{}", c as char);
+            //stdout().flush();
+            //sleep(Duration::from_millis(10));
+            gameboy.memory.ram[0xFF02] = 0x0;
+        }
+
+        // println!("{}", counter);
         gameboy.fetch();
-        counter += 1;
+        // counter += 1;
         // if counter > 47932 {
         //     gameboy.memory.copy_to_ram(0, &cart);
         // }
