@@ -27,12 +27,69 @@ impl Gameboy {
 
     pub fn fetch (&mut self) {
         let opcode = self.read_instruction(self.cpu.register.pc);
-        //println!("PC: {:#X}", self.cpu.register.pc);
-        println!("Opcode: {:#X} \nA: {:#X} F: {:#X} B: {:#X} C: {:#X} D: {:#X} E: {:#X} H: {:#X} L: {:#X} SP: {:#X} PC: {:#X}", opcode, self.cpu.register.a,
-        self.cpu.register.f, self.cpu.register.b, self.cpu.register.c, self.cpu.register.d, self.cpu.register.e, self.cpu.register.h, self.cpu.register.l, self.cpu.register.sp,
-        self.cpu.register.pc);
+        // println!("PC: {:#X}", self.cpu.register.pc);
+        // println!("Opcode: {:#X} \nA: {:#X} F: {:#X} B: {:#X} C: {:#X} D: {:#X} E: {:#X} H: {:#X} L: {:#X} SP: {:#X} PC: {:#X}", opcode, self.cpu.register.a,
+        // self.cpu.register.f, self.cpu.register.b, self.cpu.register.c, self.cpu.register.d, self.cpu.register.e, self.cpu.register.h, self.cpu.register.l, self.cpu.register.sp,
+        // self.cpu.register.pc);
         self.cpu.register.pc += 1;
         self.execute(opcode);
+    }
+
+    fn handle_interrupt(&mut self) {
+        if self.cpu.get_ime_state() {
+            let mut ie_flag = self.read_instruction(0xFFFF);
+            let mut if_flag = self.read_instruction(0xFF0F);
+
+            if (ie_flag & if_flag) != 0 {
+
+                // v-blank interrupt
+                if ((ie_flag & 1) & (if_flag & 1)) != 0 {
+                    let [lsb_pc, msb_pc] = self.cpu.register.pc.to_le_bytes();
+                    self.cpu.register.sp -= 1;
+                    self.write_instruction(self.cpu.register.sp, msb_pc);
+                    self.cpu.register.sp -= 1;
+                    self.write_instruction(self.cpu.register.sp, lsb_pc);
+
+                    self.cpu.register.pc = 0x40;
+
+                    self.write_instruction(0xFF0F, if_flag &! 1);
+                }
+
+                ie_flag = self.read_instruction(0xFFFF);
+                if_flag = self.read_instruction(0xFF0F);
+
+                // lcd stat interrupt
+                if ((ie_flag & 2) & (if_flag & 2)) != 0 {
+                    let [lsb_pc, msb_pc] = self.cpu.register.pc.to_le_bytes();
+                    self.cpu.register.sp -= 1;
+                    self.write_instruction(self.cpu.register.sp, msb_pc);
+                    self.cpu.register.sp -= 1;
+                    self.write_instruction(self.cpu.register.sp, lsb_pc);
+
+                    self.cpu.register.pc = 0x48;
+
+                    self.write_instruction(0xFF0F, if_flag &! 2);
+                }
+
+                ie_flag = self.read_instruction(0xFFFF);
+                if_flag = self.read_instruction(0xFF0F);
+
+                // timer interrupt
+                if ((ie_flag & 4) & (if_flag & 4)) != 0 {
+                    let [lsb_pc, msb_pc] = self.cpu.register.pc.to_le_bytes();
+                    self.cpu.register.sp -= 1;
+                    self.write_instruction(self.cpu.register.sp, msb_pc);
+                    self.cpu.register.sp -= 1;
+                    self.write_instruction(self.cpu.register.sp, lsb_pc);
+
+                    self.cpu.register.pc = 0x50;
+
+                    self.write_instruction(0xFF0F, if_flag &! 4);
+                }
+
+                self.cpu.set_ime_state(InterruptConds::Disabled);
+            }
+        }
     }
 
     fn _half_carry_add_u16(&self, val_1: u16, val_2: u16) -> bool {
@@ -2452,7 +2509,24 @@ fn cb_prefix(&mut self) {
         data = data | (mask << set_bit);
         self.write_instruction(address, data);
     }
+
+    fn ei(&mut self) {
+        self.cpu.register.pc += 1;
+        self.fetch();
+
+        self.cpu.set_ime_state(InterruptConds::Enabled);
+    }
+
+    fn di(&mut self) {
+        self.cpu.set_ime_state(InterruptConds::Disabled);
+    }
 }
+
+
+
+// ----------------------------TESTS-------------------------------------------------------------------------
+
+
 
 #[cfg(test)]
 mod tests {
