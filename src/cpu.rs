@@ -1,4 +1,4 @@
-use std::{convert::From};
+use std::convert::From;
 
 const ZERO_FLAG_BYTE_POSITION: u8 = 7;
 const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
@@ -34,6 +34,29 @@ impl CPU {
         cpu
     }
 }
+
+// // Initialising CPU with zero values
+// impl CPU {
+//     pub fn new() -> CPU {
+//         let cpu = CPU {
+//             register: Registers {
+//                 a: 0x01,
+//                 b: 0x0,
+//                 c: 0x13,
+//                 d: 0x0,
+//                 f: 0xB0,
+//                 e: 0xD8,
+//                 h: 0x01,
+//                 l: 0x4D,
+//                 pc: 0x100,
+//                 sp: 0xFFFE,
+//             },
+//             flags: FlagsRegister { z: false, n: false, h: false, c: false },
+//             ime: false,
+//         };
+//         cpu
+//     }
+// }
 
 #[derive(Copy, Clone)]
 pub struct FlagsRegister {
