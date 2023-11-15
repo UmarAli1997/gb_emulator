@@ -1,38 +1,57 @@
 use crate::cpu::*;
 use crate::mmu::MemoryBus;
+use crate::timer::Timer;
 
 pub struct Gameboy {
     pub cpu: CPU,
     pub memory: MemoryBus,
+    pub timer: Timer,
     // clock: u8
 }
 
 impl Gameboy {
-
     pub fn new() -> Gameboy {
         let gameboy = Gameboy {
             cpu: CPU::new(),
-            memory: MemoryBus::new()
-        }; 
+            memory: MemoryBus::new(),
+            timer: Timer::new(),
+        };
         gameboy
     }
 
-    pub fn read_instruction(&self, address: u16) -> u8 {
-        return self.memory.read_byte(address);
-    }
+    fn handle_timer(&mut self, cycle: usize) {
+        
+        // set divider 
+        self.timer.div_clocksum += cycle;
+        if self.timer.div_clocksum >= 256 {
+            self.timer.div_clocksum -= 256;
+            self.timer.div_reg = self.read_instruction(0xFF04);
+            self.timer.div_reg = self.timer.div_reg.wrapping_add(1);
+            self.write_instruction(0xFF04, self.timer.div_reg);
+        }
 
-    pub fn write_instruction(&mut self, address: u16, data: u8) {
-        self.memory.write_byte(address, data);
-    }
+        self.timer.tac_reg = self.read_instruction(0xFF07);
+        if ((self.timer.tac_reg >> 2) & 0x1) != 0 {
+            self.timer.timer_clocksum += cycle * 4;
+        }
 
-    pub fn fetch (&mut self) {
-        let opcode = self.read_instruction(self.cpu.register.pc);
-        // println!("PC: {:#X}", self.cpu.register.pc);
-        // println!("Opcode: {:#X} \nA: {:#X} F: {:#X} B: {:#X} C: {:#X} D: {:#X} E: {:#X} H: {:#X} L: {:#X} SP: {:#X} PC: {:#X}", opcode, self.cpu.register.a,
-        // self.cpu.register.f, self.cpu.register.b, self.cpu.register.c, self.cpu.register.d, self.cpu.register.e, self.cpu.register.h, self.cpu.register.l, self.cpu.register.sp,
-        // self.cpu.register.pc);
-        self.cpu.register.pc += 1;
-        self.execute(opcode);
+
+        // set clock speed of CPU
+        let mut freq = 4096;
+
+        if (self.timer.tac_reg & 3) == 1 {
+            freq = 262144;
+        }
+        else if (self.timer.tac_reg & 3) == 2 {
+            freq = 65536;
+        }
+        else if (self.timer.tac_reg & 3) == 3 {
+            freq = 16384;
+        }
+
+        while self.timer.div_clocksum >= (4194394 / freq) {
+
+        }
     }
 
     fn handle_interrupt(&mut self) {
@@ -90,6 +109,24 @@ impl Gameboy {
                 self.cpu.set_ime_state(InterruptConds::Disabled);
             }
         }
+    }
+
+    pub fn read_instruction(&self, address: u16) -> u8 {
+        return self.memory.read_byte(address);
+    }
+
+    pub fn write_instruction(&mut self, address: u16, data: u8) {
+        self.memory.write_byte(address, data);
+    }
+
+    pub fn fetch (&mut self) {
+        let opcode = self.read_instruction(self.cpu.register.pc);
+        // println!("PC: {:#X}", self.cpu.register.pc);
+        // println!("Opcode: {:#X} \nA: {:#X} F: {:#X} B: {:#X} C: {:#X} D: {:#X} E: {:#X} H: {:#X} L: {:#X} SP: {:#X} PC: {:#X}", opcode, self.cpu.register.a,
+        // self.cpu.register.f, self.cpu.register.b, self.cpu.register.c, self.cpu.register.d, self.cpu.register.e, self.cpu.register.h, self.cpu.register.l, self.cpu.register.sp,
+        // self.cpu.register.pc);
+        // self.cpu.register.pc += 1;
+        self.execute(opcode);
     }
 
     fn _half_carry_add_u16(&self, val_1: u16, val_2: u16) -> bool {
@@ -385,7 +422,7 @@ impl Gameboy {
             0xF0 => self.ldh_a_n(),
             0xF1 => self.pop(RegisterU16::AF),
             0xF2 => self.ldh_a_c(),
-            0xF3 => todo!(),
+            0xF3 => self.ei(),
             0xF4 => panic!("Illegal Opcode: {:#X}", opcode),
             0xF5 => self.push(RegisterU16::AF),
             0xF6 => self.or_n(),
@@ -393,7 +430,7 @@ impl Gameboy {
             0xF8 => self.ld_hl_sp_e(),
             0xF9 => self.ld_sp_hl(),
             0xFA => self.ld_a_nn(),
-            0xFB => todo!(),
+            0xFB => self.di(),
             0xFC => panic!("Illegal Opcode: {:#X}", opcode),
             0xFD => panic!("Illegal Opcode: {:#X}", opcode),
             0xFE => self.cp_n(),
